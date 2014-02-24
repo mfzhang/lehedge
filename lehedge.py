@@ -26,7 +26,12 @@ font = {'family': 'sans',
 mpl.rc('font', **font)
 
 
+class LeHedge:
+
+    
+
 def load_historical_data(f, tick_res):
+
     print "Loading " + f
     h = pd.read_csv(f, sep=";")
     h.columns = ['ts', 'rate', 'volume']
@@ -44,6 +49,10 @@ def load_historical_data(f, tick_res):
     print "Associating random number to each row for later sampling"
     h['rnd'] = np.random.random_sample((len(h),))
 
+    return h
+
+def compute_forward_window_length(h, tick_res):
+
     print "Computing best forward window length (maximum 3000 ticks)"
     range_of_window_sizes = range(0, 3000, 50)
     best_window_size = 0
@@ -55,11 +64,17 @@ def load_historical_data(f, tick_res):
             break
     print "Best window size is %d ticks" % (best_window_size)
 
-    print "Computing forward window duration as datetime"
-    h['post_window_duration'] = h['dtmil'].shift(-best_window_size) - h['dtmil']
+    return best_window_size
+
+# strategy : use longest window
+
+def create_backward_window(h,best_window_size,tick_res):
+
+#    print "Computing forward window duration as datetime"
+#    h['post_window_duration'] = h['dtmil'].shift(-best_window_size) - h['dtmil']
 
     print "Computing forward window profit in pips"
-    h['post_window_profit'] = tick_res * (h['rate'].shift(-best_window_size) - h['rate'])
+    h['forward_window_profit'] = tick_res * (h['rate'].shift(-best_window_size) - h['rate'])
 
     print "Filtering out rows for which we have no complete forward window"
     h = h[h['post_window_duration'].notnull()]

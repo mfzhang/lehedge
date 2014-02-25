@@ -9,7 +9,8 @@ import theano
 import theano.tensor as T
 import sklearn.preprocessing
 import datetime as dt
-
+import math
+import goldendims as gd
 
 from PIL import Image
 from theano.tensor.nnet import conv
@@ -192,6 +193,7 @@ def plot_images(d_learn,offset,ix,jx):
     fig = plt.figure()
     rows = 5
     cols = 5
+    dims = gd.GoldenRectangle(len(d_learn[0][0][0]),1.5,1.7)
     for i in range(0, rows):
         for j in range(0, cols):
             ax = fig.add_subplot(rows, cols, i * rows + j)
@@ -201,7 +203,7 @@ def plot_images(d_learn,offset,ix,jx):
             xo = d_learn[0][0][where]
             yo = 1 / (1 + np.exp(-xo)) * 255
             ax.set_title(str(where) + '->' + str(d_learn[0][1][where]))
-            ax.imshow(np.reshape(yo, (34, 56)), vmin=0, vmax=255)
+            ax.imshow(np.reshape(yo, (dims[0],dims[1])), vmin=0, vmax=255)
 
 plot_images(d_learn,0,2000,100)
 

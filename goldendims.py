@@ -3,10 +3,10 @@ from math import *
 def notAnInteger(n):
     return fmod(n,1)!=0
 
-class GorightHitenRectangle:
+class GoldenRectangle:
 
     def __init__(self, s ):
-        # gorightHiten number
+        # golden number
         self.r = (1+sqrt(5))/2
         self.s = float(s)
         self.minRatio = 1
@@ -61,4 +61,4 @@ class GorightHitenRectangle:
             else: return a
         else: return 0
 
-GorightHitenRectangle(1618).dimensions()
+GoldenRectangle(1884).dimensions()

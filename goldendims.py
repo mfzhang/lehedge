@@ -19,7 +19,7 @@ class GoldenRectangle:
 
     def give_me_one_side(self):
         x0 = int(sqrt(self.s * self.r))
-        print "x0=%d" % x0
+        #print "x0=%d" % x0
         leftHit = self.left_search(x0)
         rightHit = self.right_search(x0+1)
         if ( leftHit ==0 ):
@@ -42,14 +42,14 @@ class GoldenRectangle:
                 rightRatio = rightOtherSide/rightHit
             leftDiff = abs(self.r-leftRatio)
             rightDiff = abs(self.r-rightRatio)
-            print "Delta to golden number: left = %2f, right = %2f" % (leftDiff,rightDiff)
+            #print "Delta to golden number: left = %2f, right = %2f" % (leftDiff,rightDiff)
             if( leftDiff < rightDiff) :
                 return leftHit
             else: return rightHit
 
 
     def left_search(self, a):
-        print "a = %d" % (a)
+        #print "a = %d" % (a)
         lowerBound = 0
         while a > lowerBound :
             if ((a*a)/self.s >= self.minRatio ):
@@ -60,7 +60,7 @@ class GoldenRectangle:
         return a
 
     def right_search(self, a):
-        print "a = %d" % (a)
+        #print "a = %d" % (a)
         upperBound = self.s
         while a < upperBound:
             if( (a*a)/self.s <= self.maxRatio ):
@@ -70,4 +70,5 @@ class GoldenRectangle:
             else: return 0
         return a
 
-GoldenRectangle(1904).dimensions()
+
+

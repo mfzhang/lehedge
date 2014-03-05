@@ -71,4 +71,3 @@ class GoldenRectangle:
         return a
 
 
-

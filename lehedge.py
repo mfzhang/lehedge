@@ -11,6 +11,7 @@ import sklearn.preprocessing
 import datetime as dt
 #import math
 import goldendims as gd
+import string
 
 #from PIL import Image
 #from theano.tensor.nnet import conv
@@ -198,7 +199,8 @@ class CurrencyData:
                 print "image length=%d" % (len(yo))
                 ax.set_title(str(where) + '->' + str(self.d_learn[0][1][where]))
                 ax.imshow(np.reshape(yo, (dims[0],dims[1])), vmin=0, vmax=255)
-                plt.savefig('myplot.png')
+                plotfile = string.replace(string.replace(self.filename,'.','_'),'/$','') + '.png'
+                plt.savefig(plotfile)
 
 #print "Training set : %d" % (len(d_learn[0][0]))
 #print "Test set : %d" % (len(d_learn[1][0]))

@@ -120,11 +120,9 @@ class CurrencyData:
         d_train_x = []
         d_train_y = []
 
-        j = 0
         for (r, label) in bins.iteritems():
 
             print "bin (%d,%d] -> class %d" % (r[0], r[1], label)
-
 
             # isolate same-class records
             mask = ((self.d['forward_window_profit'] >= r[0]) & (self.d['forward_window_profit'] <= r[1]))
@@ -140,7 +138,7 @@ class CurrencyData:
             # truncate and copy data held in named cols to pure numpy array
             test_a = np.array(df_test[:test_per_class].values)
             #test_b = np.delete(test_a, np.s_[:7],1)
-            x_test = np.delete(test_a, np.s_[:10], 1).astype('float')
+            x_test = np.delete(test_a, np.s_[:9], 1).astype('float')
 
             # use remaining 80% of data aside for training in the limit of 10000 examples
             training_mask = (df['rnd'] <= 0.8)
@@ -154,15 +152,15 @@ class CurrencyData:
             print "Sampled %d examples" % (len(train_a))
             #train_a = np.array(df_training[:train_per_class].values)
             #train_b = sample(train_a, train_per_class)
-            x_train = np.delete(train_a, np.s_[:10], 1).astype('float')
+            x_train = np.delete(train_a, np.s_[:9], 1).astype('float')
 
             for i in range(0, len(x_train)):
                 x_train[i] = sklearn.preprocessing.scale(x_train[i])
             for i in range(0, len(x_test)):
                 x_test[i] = sklearn.preprocessing.scale(x_test[i])
 
-            with open("training_rows#" + str(label), 'wb') as fp: pickle.dump(x_train, fp)
-            with open("test_rows#" + str(label), 'wb') as fp: pickle.dump(x_test, fp)
+            #with open("training_rows#" + str(label), 'wb') as fp: pickle.dump(x_train, fp)
+            #with open("test_rows#" + str(label), 'wb') as fp: pickle.dump(x_test, fp)
 
             y_test = np.ones((len(x_test),), dtype=np.int) * label
             y_train = np.ones((len(x_train),), dtype=np.int) * label
@@ -180,7 +178,9 @@ class CurrencyData:
 
         self.d_learn = ((d_train_x, d_train_y), (d_test_x, d_test_y))
 
-    def plot_images(self, offset, ix, jx):
+    def plot_images(self):
+        selection = np.random.choice(len(self.d_learn[0][0]),25)
+        #s = self.d_learn[0][0][selection]
         fig = plt.figure()
         rows = 5
         cols = 5
@@ -191,24 +191,14 @@ class CurrencyData:
                 ax = fig.add_subplot(rows, cols, i * rows + j)
                 ax.set_xticks([])
                 ax.set_yticks([])
-                where = offset + i * ix + j * jx
+                #where = offset + i * ix + j * jx
+                where = selection[i*rows+j]
                 xo = self.d_learn[0][0][where]
                 yo = 1 / (1 + np.exp(-xo)) * 255
-                print "image length=%d" % (len(y0))
+                print "image length=%d" % (len(yo))
                 ax.set_title(str(where) + '->' + str(self.d_learn[0][1][where]))
                 ax.imshow(np.reshape(yo, (dims[0],dims[1])), vmin=0, vmax=255)
-                plt.savefig('plot-'+str(offset)+'.png')
-
-audusd = CurrencyData("./$AUDUSD.Ask.txt",10000)
-audusd.load_historical_data()
-audusd.compute_forward_window_length()
-audusd.filter_incomplete_duration()
-audusd.filter_incomplete_profit()
-audusd.create_backward_windows()
-audusd.build_datasets()
-audusd.plot_images(0,2000,100)
-#audusd.plot_images(10000,1800,100)
-#audusd.plot_images(18000,1800,100)
+                plt.savefig('myplot.png')
 
 #print "Training set : %d" % (len(d_learn[0][0]))
 #print "Test set : %d" % (len(d_learn[1][0]))

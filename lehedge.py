@@ -57,6 +57,16 @@ class CurrencyData:
 
         self.h = h
 
+    def compute_period(self):
+        self.start_time = min(self.h['dtmil'])
+        self.end_time   = max(self.h['dtmil'])
+
+    def trim_before(self,when):
+        self.h = self.h[self.h['dtmil']>when]
+
+    def trim_after(self,when):
+        self.h = self.h[self.h['dtmil']<when]
+
     def compute_forward_window_length(self):
 
         print "Computing best forward window length (maximum 3000 ticks)"
@@ -71,6 +81,11 @@ class CurrencyData:
         print "Best window size is %d ticks" % (best_window_size)
 
         self.best_window_size = best_window_size
+
+    def compute_backward_window_length(self):
+
+        print "Computing backward window length"
+        self.backward_window_length = 2*self.best_window_size
 
     # strategy : use longest window
 

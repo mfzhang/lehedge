@@ -82,17 +82,22 @@ class CurrencyData:
 
         self.best_window_size = best_window_size
 
-    def compute_backward_window_length(self):
+    def set_backward_window_length(self,w):
 
-        print "Computing backward window length"
-        self.backward_window_length = 2*self.best_window_size
+        print "Setting backward window length"
+        self.backward_window_length = w
 
+
+    def set_forward_window_length(self,w):
+
+        print "Setting forward window length"
+        self.forward_window_length = w
     # strategy : use longest window
 
     def filter_incomplete_duration(self):
 
         print "Computing forward window duration as datetime"
-        self.h['forward_window_duration'] = self.h['dtmil'].shift(-self.best_window_size) - self.h['dtmil']
+        self.h['forward_window_duration'] = self.h['dtmil'].shift(-self.forward_window_length) - self.h['dtmil']
         print "Filtering out rows for which we have no complete forward window"
         self.h = self.h[self.h['forward_window_duration'].notnull()]
         print "Computing forward window duration in seconds"
@@ -103,9 +108,9 @@ class CurrencyData:
 
 
     def filter_incomplete_profit(self):
-
+        #requires( best _window_size )
         print "Computing forward window profit in pips used for classification"
-        self.h['forward_window_profit'] = self.tick_res * (self.h['rate'].shift(-self.best_window_size) - self.h['rate'])
+        self.h['forward_window_profit'] = self.tick_res * (self.h['rate'].shift(-self.forward_window_length) - self.h['rate'])
 
         print "Filtering out rows with null profit and casting profit to int"
         self.h['forward_window_profit'] = self.h['forward_window_profit'][self.h['forward_window_profit'].notnull()].round().astype('int')
@@ -114,13 +119,13 @@ class CurrencyData:
     def create_backward_windows(self):
 
         print "Creating backward windows with twice the length of the forward window for each row"
-        backward_window_size = self.best_window_size*2
-        for lag in range(0, backward_window_size):
+        assert self.backward_window_length != 0
+        for lag in range(0, self.backward_window_length):
             colname = 'r' + str(lag)
             self.h[colname] = self.h['rate'].shift(lag)
 
         print "Filtering out rows with incomplete backward window"
-        self.d = self.h[self.h['r' + str(backward_window_size - 1)].notnull()]
+        self.d = self.h[self.h['r' + str(self.backward_window_length - 1)].notnull()]
 
 
     def build_datasets(self):

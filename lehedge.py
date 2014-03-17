@@ -50,7 +50,7 @@ class CurrencyData:
         gb = h.groupby('ts')
         h['dtrank'] = gb['dt'].rank(method='first')
         parse_with_millisecond = lambda x: dt.datetime.strptime(x, '%Y%m%d %H%M%S %f')
-        h['dtmil'] = h.apply(lambda row: parse_with_millisecond(row['ts'] + ' ' + str(int(row['dtrank']))), axis=1)
+        h['dtmil'] = h.apply(lambda row: parse_with_millisecond(row['ts'] + ' ' + "{0:06d}".format(int(row['dtrank']))), axis=1)
 
         print "Associating random number to each row for later sampling"
         h['rnd'] = np.random.random_sample((len(h),))
@@ -69,12 +69,13 @@ class CurrencyData:
 
     def compute_forward_window_length(self):
 
-        print "Computing best forward window length (maximum 3000 ticks)"
-        range_of_window_sizes = range(0, 3000, 50)
+        print "Computing best forward window length (maximum 7200 ticks)"
+        range_of_window_sizes = range(0, 7200, 50)
         best_window_size = 0
         for window_size in range_of_window_sizes:
             tmp = self.tick_res * (self.h['rate'].shift(-window_size) - self.h['rate'])
-            q = tmp.quantile(0.98)
+            q = tmp.quantile(0.985)
+            print q
             if round(q) >= 10.0:
                 best_window_size = window_size
                 break
@@ -102,8 +103,8 @@ class CurrencyData:
         self.h = self.h[self.h['forward_window_duration'].notnull()]
         print "Computing forward window duration in seconds"
         self.h['forward_window_duration_seconds'] = self.h['forward_window_duration'] / np.timedelta64(1, 's')
-        print "Filtering out rows part of everlasting forward windows (> 2 hours)"
-        a_long_enough_period_to_identify_closed_markets = 7200
+        print "Filtering out rows part of everlasting forward windows (> 4 hours)"
+        a_long_enough_period_to_identify_closed_markets = 14400
         self.h = self.h[self.h['forward_window_duration_seconds'] < a_long_enough_period_to_identify_closed_markets]
 
 
@@ -199,12 +200,9 @@ class CurrencyData:
 
         self.d_learn = ((d_train_x, d_train_y), (d_test_x, d_test_y))
 
-    def plot_images(self):
-        selection = np.random.choice(len(self.d_learn[0][0]),25)
-        #s = self.d_learn[0][0][selection]
+    def plot_images(self, rows=5, cols=5):
+        selection = np.random.choice(len(self.d_learn[0][0]),rows*cols)
         fig = plt.figure()
-        rows = 5
-        cols = 5
         dims = gd.GoldenRectangle(len(self.d_learn[0][0][0])).dimensions()
         print dims
         for i in range(0, rows):

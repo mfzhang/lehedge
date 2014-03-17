@@ -3,9 +3,9 @@ import numpy as np
 import goldendims as gd
 
 
-ask = {"./$AUDUSD.Ask.txt":10000,
-       "./$EURUSD.Ask.txt":10000,
-       "./$USDJPY.Ask.txt":100}
+ask = {"./AUDUSD.Ask.Test.txt":10000,
+       "./EURUSD.Ask.Test.txt":10000,
+       "./USDJPY.Ask.Test.txt":100}
 
 min_train_size = 10000000
 min_window_size = 10000000

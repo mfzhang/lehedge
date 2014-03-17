@@ -2,6 +2,7 @@ from lehedge import *
 import datetime as dt
 import pandas as pd
 import numpy as np
+import sklearn.preprocessing
 
 class Portfolio:
 
@@ -59,7 +60,13 @@ class Portfolio:
             if( len(cd.h) < self.minimum_series_length ): self.minimum_series_length=len(cd.h)
 
     def compute_forward_profit(self):
-        self.forward_profit = self.d[0].h['forward_window_profit'] + self.d[1].h['forward_window_profit'] + self.d[2].h['forward_window_profit']
+        """
+
+        :type self: int
+        """
+        self.forward_profit = self.d[0].h['forward_window_profit'] + \
+                              self.d[1].h['forward_window_profit'] + \
+                              self.d[2].h['forward_window_profit']
 
 
     def fast_forward(self):
@@ -79,33 +86,50 @@ class Portfolio:
 
     def build_timeline(self):
         # build union of all tiemstamps appearing in all 3 channels
+        self.d[0].h.sort()
+        self.d[1].h.sort()
+        self.d[2].h.sort()
         self.init_timestamp = dt.datetime(1970, 1, 1, 0, 0, 0, 000000)
         for cd in self.d:
-            if( cd.h['dtmil'][self.common_backward_window_size] > self.init_timestamp): self.init_timestamp = cd.h['dtmil'][self.common_backward_window_size]
+            if cd.h['dtmil'][self.common_backward_window_size] > self.init_timestamp:
+                self.init_timestamp = cd.h['dtmil'][self.common_backward_window_size]
 
-        self.timeline = pd.Series(np.unique(np.hstack([self.d[0].h['dtmil'], self.d[1].h['dtmil'], self.d[2].h['dtmil']])))
-        self.timeline = self.timeline[self.timeline>=self.init_timestamp]
+        distinct_timestamps = np.unique(np.hstack([self.d[0].h['dtmil'], self.d[1].h['dtmil'], self.d[2].h['dtmil']]))
+        randomizer = np.random.random_sample((len(distinct_timestamps),))
+        self.timeline = pd.Series(randomizer,index=distinct_timestamps)
+        #self.timeline = self.timeline[self.timeline>=self.init_timestamp]
 
-        pass
+        #pass
 
     def eat(self):
         # at each millisecond, fetch the latest bacward_window_size ticks
         # for each currency
         # init time = max timestamp such as all 3 buffers can be entirely filled
-        self.rnd = np.random.random_sample((len(self.timeline),))
+        #self.timeline.sort()
+        tenpct = ((self.timeline <= 0.1) & (self.timeline.index > self.init_timestamp))
+        self.training_timestamps = self.timeline[tenpct].index
+        print self.training_timestamps
 
-        fillcount = int(self.minimum_series_length*0.1)
-        self.common = np.zeros((fillcount, self.common_backward_window_size,3))
-        count = 0
-        for i in range(0,len(self.timeline)):
-            if( count < fillcount and self.rnd[i] <= 0.1):
-                ts = self.timeline[i]
-                for j in range(0, self.common_backward_window_size):
-                    self.common[i][j][0] = self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:][j]
-                    self.common[i][j][1] = self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:][j]
-                    self.common[i][j][2] = self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:][j]
-                count = count +1
+        self.common = np.zeros((3,len(self.training_timestamps), self.common_backward_window_size))
+        print "sampling %d frames with length %d" % (len(self.training_timestamps),self.common_backward_window_size)
 
+        for i in range(0,len(self.training_timestamps)):
+            ts = self.training_timestamps[i]
+            #print "i= %d, ts=%s" % (i,ts.strftime("%A, %d. %B %Y %I:%M%p"))
+            #startR = min(self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'].index)
+            #startG = min(self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'].index)
+            #startB = min(self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'].index)
+            self.common[0][i] = sklearn.preprocessing.scale(self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'])
+            self.common[1][i] = sklearn.preprocessing.scale(self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'])
+            self.common[2][i] = sklearn.preprocessing.scale(self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'])
+            #for j in range(0, self.common_backward_window_size):
+                #print self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate']
+                #self.common[i][j][0] = self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'][j+startR]
+                #print self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate']
+                #self.common[i][j][1] = self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'][j+startG]
+                #print self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate']
+                #self.common[i][j][2] = self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'][j+startB]
+        self.training = self.common.swapaxes(0,2).swapaxes(0,1)
 
 
     def go(self):
@@ -177,7 +201,7 @@ class Portfolio:
             y_test = np.ones((len(x_test),), dtype=np.int) * label
             y_train = np.ones((len(x_train),), dtype=np.int) * label
 
-            if d_train_x == []:
+            if not d_train_x:
                 d_train_x = x_train
                 d_train_y = y_train
                 d_test_x = x_test

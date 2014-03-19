@@ -107,14 +107,21 @@ class CurrencyData:
         a_long_enough_period_to_identify_closed_markets = 14400
         self.h = self.h[self.h['forward_window_duration_seconds'] < a_long_enough_period_to_identify_closed_markets]
 
-
-    def filter_incomplete_profit(self):
-        #requires( best _window_size )
+    def compute_forward_profit(self):
+        '''
+        requires( best _window_size )
+        '''
         print "Computing forward window profit in pips used for classification"
         self.h['forward_window_profit'] = self.tick_res * (self.h['rate'].shift(-self.forward_window_length) - self.h['rate'])
+        #self.h['forward_window_profit'] = self.h['forward_window_profit'].round().astype('int')
 
+
+    def filter_incomplete_profit(self):
+        '''
+
+        '''
         print "Filtering out rows with null profit and casting profit to int"
-        self.h['forward_window_profit'] = self.h['forward_window_profit'][self.h['forward_window_profit'].notnull()].round().astype('int')
+        self.h = self.h[self.h['forward_window_profit'].notnull()==True]
 
 
     def create_backward_windows(self):

@@ -34,13 +34,20 @@ class Portfolio:
             cd.set_forward_window_length(self.common_forward_window_size)
             cd.set_backward_window_length(self.common_backward_window_size)
 
+    def compute_forward_profit(self):
+        for cd in self.d:
+            cd.compute_forward_profit()
+
+
     def clean_data(self):
         for cd in self.d:
             cd.filter_incomplete_duration()
             cd.filter_incomplete_profit()
 
     def align_start_times(self):
-        # post-filtering
+        '''
+        useless logic
+        '''
         max_start = dt.datetime(1970, 1, 1, 0, 0, 0, 000000)
         for cd in self.d :
             if( cd.start_time > max_start) :
@@ -59,7 +66,7 @@ class Portfolio:
         for cd in self.d:
             if( len(cd.h) < self.minimum_series_length ): self.minimum_series_length=len(cd.h)
 
-    def compute_forward_profit(self):
+    def compute_total_forward_profit(self):
         """
 
         :type self: int
@@ -85,18 +92,28 @@ class Portfolio:
         pass
 
     def build_timeline(self):
-        # build union of all tiemstamps appearing in all 3 channels
+        '''
+        build union of all tiemstamps appearing in all 3 channels
+        '''
         self.d[0].h.sort()
         self.d[1].h.sort()
         self.d[2].h.sort()
+
         self.init_timestamp = dt.datetime(1970, 1, 1, 0, 0, 0, 000000)
         for cd in self.d:
             if cd.h['dtmil'][self.common_backward_window_size] > self.init_timestamp:
                 self.init_timestamp = cd.h['dtmil'][self.common_backward_window_size]
 
+        self.min_ts = dt.datetime(2070, 1, 1, 0, 0, 0, 000000)
+        for cd in self.d:
+            if max(cd.h['dtmil']) <= self.min_ts:
+                self.min_ts = max(cd.h['dtmil'])
+
         distinct_timestamps = np.unique(np.hstack([self.d[0].h['dtmil'], self.d[1].h['dtmil'], self.d[2].h['dtmil']]))
-        randomizer = np.random.random_sample((len(distinct_timestamps),))
-        self.timeline = pd.Series(randomizer,index=distinct_timestamps)
+        trim_end = distinct_timestamps[distinct_timestamps <= np.datetime64(self.min_ts.to_pydatetime())]
+        trim_beginning = trim_end[trim_end >= np.datetime64(self.init_timestamp.to_pydatetime())]
+        randomizer = np.random.random_sample((len(trim_beginning),))
+        self.timeline = pd.Series(randomizer,index=trim_beginning)
         #self.timeline = self.timeline[self.timeline>=self.init_timestamp]
 
         #pass
@@ -106,43 +123,38 @@ class Portfolio:
         # for each currency
         # init time = max timestamp such as all 3 buffers can be entirely filled
         #self.timeline.sort()
-        tenpct = ((self.timeline <= 0.1) & (self.timeline.index > self.init_timestamp))
+        #tenpct = ((self.timeline <= 0.1) & (self.timeline.index > self.init_timestamp))
+        samples_count = len(self.timeline)
+        threshold = 15000.0 / samples_count
+        tenpct = (self.timeline <= threshold)
         self.training_timestamps = self.timeline[tenpct].index
         print self.training_timestamps
 
-        self.common = np.zeros((3,len(self.training_timestamps), self.common_backward_window_size))
+        self.common  = np.zeros((3,len(self.training_timestamps), self.common_backward_window_size))
+        self.profits = np.zeros((len(self.training_timestamps),3))
         print "sampling %d frames with length %d" % (len(self.training_timestamps),self.common_backward_window_size)
 
         for i in range(0,len(self.training_timestamps)):
             ts = self.training_timestamps[i]
-            #print "i= %d, ts=%s" % (i,ts.strftime("%A, %d. %B %Y %I:%M%p"))
-            #startR = min(self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'].index)
-            #startG = min(self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'].index)
-            #startB = min(self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'].index)
             self.common[0][i] = sklearn.preprocessing.scale(self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'])
             self.common[1][i] = sklearn.preprocessing.scale(self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'])
             self.common[2][i] = sklearn.preprocessing.scale(self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'])
-            #for j in range(0, self.common_backward_window_size):
-                #print self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate']
-                #self.common[i][j][0] = self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'][j+startR]
-                #print self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate']
-                #self.common[i][j][1] = self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'][j+startG]
-                #print self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate']
-                #self.common[i][j][2] = self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['rate'][j+startB]
+            pidxR = max(self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'].index)
+            self.profits[i][0] =   self.d[0].h[self.d[0].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'][pidxR]
+            pidxG = max(self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'].index)
+            self.profits[i][1] =   self.d[1].h[self.d[1].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'][pidxG]
+            pidxB = max(self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'].index)
+            self.profits[i][2] =   self.d[2].h[self.d[2].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'][pidxB]
+
         self.training = self.common.swapaxes(0,2).swapaxes(0,1)
 
 
-    def go(self):
-        for cd in self.d:
-            cd.build_datasets()
-
-        self.common = np.zeros((self.minimum_series_length,self.common_backward_window_size,3))
-
-        for i in range(0,self.minimum_series_length):
+    def sigmoidize(self):
+        for i in range(0, len(self.training)):
             for j in range(0, self.common_backward_window_size):
-                self.common[i][j][0] = 1 / (1 + np.exp(-self.d[0].d_learn[0][0][i][j]))
-                self.common[i][j][1] = 1 / (1 + np.exp(-self.d[1].d_learn[0][0][i][j]))
-                self.common[i][j][2] = 1 / (1 + np.exp(-self.d[2].d_learn[0][0][i][j]))
+                self.training[i][j][0] = 1 / (1 + np.exp(-self.training[i][j][0]))
+                self.training[i][j][1] = 1 / (1 + np.exp(-self.training[i][j][1]))
+                self.training[i][j][2] = 1 / (1 + np.exp(-self.training[i][j][2]))
 
     def build_learning_datasets(self):
         bins = {(int(self.d['forward_window_profit'].min()), -10.0): -1,
@@ -219,7 +231,7 @@ class Portfolio:
     def plot(self):
         rows = 5
         cols = 5
-        selection = np.random.choice(self.minimum_series_length,rows*cols)
+        selection = np.random.choice(len(self.training),rows*cols)
         fig = plt.figure()
         dims = gd.GoldenRectangle(self.common_backward_window_size).dimensions()
         print dims
@@ -230,7 +242,10 @@ class Portfolio:
                 ax.set_yticks([])
                 where = selection[i*rows+j]
                 #print "image length=%d" % (len(yo))
-                ax.set_title('')
-                ax.imshow(np.reshape(self.common[where], (dims[0],dims[1],3)))
+                profits = self.profits[where]
+                ax.set_title('('+str(round(profits[0]))+','+str(round(profits[1]))+','+str(round(profits[2]))+')')
+                print self.training[where].shape
+                ax.imshow(np.reshape(self.training[where], (dims[0],dims[1],3)))
+                plt.show()
                 plt.savefig('common.png')
 

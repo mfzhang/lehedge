@@ -109,7 +109,7 @@ class CurrencyData:
 
     def compute_forward_profit(self):
         '''
-        requires( best _window_size )
+        requires( forward window size )
         '''
         print "Computing forward window profit in pips used for classification"
         self.h['forward_window_profit'] = self.tick_res * (self.h['rate'].shift(-self.forward_window_length) - self.h['rate'])
@@ -227,10 +227,3 @@ class CurrencyData:
                 plotfile = string.replace(string.replace(self.filename,'.','_'),'/$','') + '.png'
                 plt.savefig(plotfile)
 
-#print "Training set : %d" % (len(d_learn[0][0]))
-#print "Test set : %d" % (len(d_learn[1][0]))
-
-#with open("d_learn", 'wb') as fp:
-#    pickle.dump(d_learn, fp)
-
-#d_learn

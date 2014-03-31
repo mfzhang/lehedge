@@ -14,7 +14,7 @@ askTest = {"./AUDUSD.Ask.Test.txt":10000,
        "./EURUSD.Ask.Test.txt":10000,
        "./USDJPY.Ask.Test.txt":100}
 
-ask = askFull
+ask = askTest
 
 for (f,tick_res) in ask.iteritems():
     p.add_currency(f,tick_res)

@@ -169,19 +169,26 @@ class Portfolio:
         rows = 5
         cols = 5
         selection = np.random.choice(len(self.working_sets[name][0]),rows*cols)
-        fig = plt.figure()
         dims = gd.GoldenRectangle(self.common_backward_window_size).dimensions()
         print dims
         for i in range(0, rows):
             for j in range(0, cols):
-                ax = fig.add_subplot(rows, cols, i * rows + j)
-                ax.set_xticks([])
-                ax.set_yticks([])
+                fig = plt.figure()
+                if dims[0]>dims[1]:
+                    fig.set_size_inches(dims[1]/100.0,dims[0]/100.0)
+                else:
+                    fig.set_size_inches(dims[0]/100.0,dims[1]/100.0)
+                #ax = fig.add_subplot(rows, cols, i * rows + j)
+                #ax.set_xticks([])
+                #ax.set_yticks([])
                 where = selection[i*rows+j]
                 #print "image length=%d" % (len(yo))
                 profits = self.working_sets[name][1][where]
-                ax.set_title('('+str(round(profits[0]))+','+str(round(profits[1]))+','+str(round(profits[2]))+')')
-                ax.imshow(np.reshape(self.working_sets[name][0][where], (dims[0],dims[1],3)))
-        plt.show()
-        plt.savefig('working_set-'+name+'.png')
+                #ax.set_title('('+str(round(profits[0]))+','+str(round(profits[1]))+','+str(round(profits[2]))+')')
+                fname = '('+str(round(profits[0]))+','+str(round(profits[1]))+','+str(round(profits[2]))+')'
+                #ax.imshow(np.reshape(self.working_sets[name][0][where], (dims[0],dims[1],3)))
+                fig.figimage(np.reshape(self.working_sets[name][0][where], (dims[0],dims[1],3)),0,0)
+                plt.show()
+                plt.savefig('working_set-'+fname+'.png',dpi=100)
+                plt.close(fig)
 

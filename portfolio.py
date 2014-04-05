@@ -131,8 +131,8 @@ class Portfolio:
         #self.timeline.sort()
         #tenpct = ((self.timeline <= 0.1) & (self.timeline.index > self.init_timestamp))
         '''
-        samples_count = len(self.timeline)
-        #threshold = 15000.0 / samples_count
+
+        #
         #tenpct = ( lower_rnd <= self.timeline and self.timeline < higher_rnd )
         lowpass = self.timeline[self.timeline < higher_rnd]
         hipass  = lowpass[lowpass>lower_rnd]
@@ -156,6 +156,18 @@ class Portfolio:
             profits[i][2] =   self.source_data[2].h[self.source_data[2].h['dtmil'] < ts][-self.common_backward_window_size:]['forward_window_profit'][pidxB]
 
         self.working_sets[name] = (common.swapaxes(0,2).swapaxes(0,1),profits)
+
+    def build_datasets(self, tr, ts, vl):
+        samples_count = len(self.timeline)
+        lower = 0.0
+        upper = 1.0*tr/ samples_count
+        self.eat('training',lower,upper)
+        lower = upper
+        upper = upper + 1.0*ts / samples_count
+        self.eat('test',lower,upper)
+        lower = upper
+        upper = upper + 1.0*vl / samples_count
+        self.eat('validation',lower,upper)
 
 
     def sigmoidize(self,name):

@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import sklearn.preprocessing
 from sklearn.cluster import KMeans
+import csv
 from sklearn.decomposition import PCA
 
 class Portfolio:
@@ -125,15 +126,12 @@ class Portfolio:
 
     def eat(self,name,lower_rnd=0.0,higher_rnd=0.1):
         '''
-        # at each millisecond, fetch the latest bacward_window_size ticks
-        # for each currency
-        # init time = max timestamp such as all 3 buffers can be entirely filled
-        #self.timeline.sort()
-        #tenpct = ((self.timeline <= 0.1) & (self.timeline.index > self.init_timestamp))
+        At each millisecond, fetch the latest backward_window_size ticks for each currency
+        init time = max timestamp such as all 3 buffers can be entirely filled
+        self.timeline.sort()
+        tenpct = ((self.timeline <= 0.1) & (self.timeline.index > self.init_timestamp))
         '''
 
-        #
-        #tenpct = ( lower_rnd <= self.timeline and self.timeline < higher_rnd )
         lowpass = self.timeline[self.timeline < higher_rnd]
         hipass  = lowpass[lowpass>lower_rnd]
         self.training_timestamps = hipass.index
@@ -204,3 +202,26 @@ class Portfolio:
                 plt.savefig('working_set-'+fname+'.png',dpi=100)
                 plt.close(fig)
 
+    def dump_profits(self):
+        with open('training_profits.csv','wb') as result:
+            writer = csv.writer(result,dialect="excel")
+            writer.writerows(self.working_sets['training'][1])
+
+    def dump_working_sets_as_png(self,name):
+        dims = gd.GoldenRectangle(self.common_backward_window_size).dimensions()
+        print dims
+        for i in range(0, len(self.working_sets[name][0])):
+            fig = plt.figure()
+            if dims[0]>dims[1]:
+                fig.set_size_inches(dims[1]/100.0,dims[0]/100.0)
+            else:
+                fig.set_size_inches(dims[0]/100.0,dims[1]/100.0)
+                #print "image length=%d" % (len(yo))
+            profits = self.working_sets[name][1][i]
+                #ax.set_title('('+str(round(profits[0]))+','+str(round(profits[1]))+','+str(round(profits[2]))+')')
+            fname = '('+str(round(profits[0]))+','+str(round(profits[1]))+','+str(round(profits[2]))+')'
+                #ax.imshow(np.reshape(self.working_sets[name][0][where], (dims[0],dims[1],3)))
+            fig.figimage(np.reshape(self.working_sets[name][0][i], (dims[0],dims[1],3)),0,0)
+            plt.show()
+            plt.savefig('./img/working_set-'+str(i)+'.png',dpi=100)
+            plt.close(fig)

@@ -3,27 +3,37 @@ FX Data Check
 
 The process of downloading forex data from my broker is a bit tedious, at any point in time I only have access to the last 2 weeks of tick history. 
 
+```{r}
+#source("download_data.R")
+```
 
 ```{r}
 library(ggplot2)
 
-files <- c("EURUSD-Ask-0622-0718",
-           "EURUSD-Bid-0622-0718",
-           "EURJPY-Ask-0622-0718",
-           "EURJPY-Bid-0622-0718",
-           "USDJPY-Ask-0620-0718",
-           "USDJPY-Bid-0620-0718")
+files <- c("EURUSD-Ask-0622-0729",
+           "EURUSD-Bid-0622-0729",
+           "EURJPY-Ask-0622-0729",
+           "EURJPY-Bid-0622-0729",
+           "USDJPY-Ask-0622-0729",
+           "USDJPY-Bid-0622-0729")
 
 plotTs <- function(filename) {
   d <- read.table(paste("./", filename, ".txt", sep=""), sep=";", quote="\"")
   d$dt <- as.POSIXct(d$V1,format="%Y%m%d %H%M%S")
-  ggplot(d,aes(dt,V2)) + geom_line() + xlab("Date/time") + ylab("Rate") + ggtitle(filename)
+  p <- ggplot(d,aes(dt,V2)) + geom_line() + xlab("Date/time") + ylab("Rate") + ggtitle(filename))
 }
 
 for( filename in files ){
   print(filename)
-  plotTs(filename)
+  print(plotTs(filename))
 }
 
 ```
+
+
+```{r}
+plotTs(files[2])
+```
+
+
 

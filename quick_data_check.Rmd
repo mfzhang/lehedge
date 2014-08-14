@@ -10,12 +10,12 @@ The process of downloading forex data from my broker is a bit tedious, at any po
 ```{r}
 library(ggplot2)
 
-files <- c("EURUSD-Ask-0622-0729",
-           "EURUSD-Bid-0622-0729",
-           "EURJPY-Ask-0622-0729",
-           "EURJPY-Bid-0622-0729",
-           "USDJPY-Ask-0622-0729",
-           "USDJPY-Bid-0622-0729")
+files <- c("EURUSD-Ask",
+           "EURUSD-Bid",
+           "EURJPY-Ask",
+           "EURJPY-Bid",
+           "USDJPY-Ask",
+           "USDJPY-Bid")
 
 plotTs <- function(filename) {
   d <- read.table(paste("./", filename, ".txt", sep=""), sep=";", quote="\"")

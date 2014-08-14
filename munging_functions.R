@@ -1,3 +1,5 @@
+library(stringr)
+
 createPkMs <- function(d) {
   d$rmin <- rank(d$V1,ties.method="min")
   d$milli <- str_pad(as.integer(row.names(d)) - d$rmin + 1, 3, pad="0") 

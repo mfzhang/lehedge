@@ -1,7 +1,7 @@
 source('munging_functions.R')
 
-ask <- read.csv('USDJPY-Ask-0620-0718.100k.txt',sep=";",header=FALSE)
-bid <- read.csv('USDJPY-Bid-0620-0718.100k.txt',sep=";",header=FALSE)
+ask <- read.csv('USDJPY-Ask-100k.txt',sep=";",header=FALSE)
+bid <- read.csv('USDJPY-Bid-100k.txt',sep=";",header=FALSE)
 
 ask <- createPkStr(ask)
 bid <- createPkStr(bid)

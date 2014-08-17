@@ -4,56 +4,58 @@ eurjpy.dukascopy <- data.frame()
 currency.precision <- 1000
 options(digits.secs = 3)
 
-for( month in 0:7) {
-  for(day in 1:31)  {
-    daydata <- data.frame()
-    for( hour in 0:23) {
-      # increment month value for our own bookeeping (Dukascopy counts months of the year starting at zero)
-      m <- str_pad(month,2,pad='0')
-      d <- str_pad(day,2,pad='0')
-      h <- str_pad(hour,2,pad='0')
-      dradix <- paste('./dukascopy/EURJPY_2014',str_pad(month+1,2,pad='0'),d,'_',h,sep='')
-      if(!file.exists(dradix)) {
-        print(paste("file",dradix,"doesn't exist"))
-        next
+for( y in 2014) {
+  for( month in 0:7) {
+    m <- str_pad(month,2,pad='0')
+    for(day in 1:31)  {
+      daydata <- data.frame()
+      d <- str_pad(day,2,pad='0')  
+      for( hour in 0:23) {
+        # increment month value for our own bookeeping (Dukascopy counts months of the year starting at zero)  
+        h <- str_pad(hour,2,pad='0')
+        realMonth <- str_pad(month+1,2,pad='0')
+        dradix <- paste('./dukascopy/EURJPY_2014',realMonth,d,'_',h,sep='')
+        if(!file.exists(dradix)) {
+          next
+        }
+        print(dradix)
+        fs4 <- file.info(dradix)$size
+        
+        data <- file(dradix,'rb')
+        alld <- readBin(data,what=raw(),n=fs4) 
+        numRec <- fs4/20
+        dim(alld) <- c(20,numRec)
+        dt=readBin(alld[1:4,],what="integer",size=4,endian="big",n=numRec)
+        
+        dts <- paste('2014',
+                     realMonth,
+                     d,
+                     ' ',
+                     h,
+                     ':',
+                     str_pad(dt %/% 60000,2,pad='0'),
+                     ':',
+                     str_pad((dt %/% 1000) %% 60,2,pad='0'),
+                     '.',
+                     str_pad(dt %% 1000,3,pad='0'),
+                     sep='')
+        
+        hourdata <- data.frame(ts=dts,
+                               year=y,
+                               month=month+1,
+                               day=day,
+                               hour=hour,
+                               minute=dt %/% 60000,
+                               sec=(dt %/% 1000) %% 60,
+                               mil=dt%%1000,
+                               ask=readBin(alld[5:8,],what="integer",size=4,endian="big",n=numRec)/currency.precision,
+                               bid=readBin(alld[9:12,],what="integer",size=4,endian="big",n=numRec)/currency.precision,
+                               ask.vol=readBin(alld[13:16,],what="numeric",size=4,endian="big",n=numRec),
+                               bid.vol=readBin(alld[17:20,],what="numeric",size=4,endian="big",n=numRec))
+        close(data)
+        daydata <- rbind(daydata,hourdata)
       }
-      print(dradix)
-      data <- file(dradix,'rb')
-      allmilli <- readBin(data,integer(),endian="big")
-      
-      hourdata <- data.frame()
-      
-      while( allmilli >= 0 & allmilli < 3600000) {
-        allsecs <- allmilli %/% 1000
-        minutes <- allsecs %/% 60
-        secs <- allsecs - minutes*60
-        millisecs <- allmilli - allsecs*1000
-        # dt 
-        dt <- strptime(paste('2014',
-                             str_pad(month+1,2,pad='0'),
-                             d,
-                             ' ',
-                             h,
-                             ':',
-                             minutes,
-                             ':',
-                             secs,
-                             '.',
-                             millisecs,
-                             sep=''), "%Y%m%d %H:%M:%OS")
-        ask <- readBin(data,integer(),endian="big")/currency.precision
-        bid <- readBin(data,integer(),endian="big")/currency.precision
-        ask.vol <- readBin(data,double(),size=4,endian="big")
-        bid.vol <- readBin(data,double(),size=4,endian="big")
-        hourdata <- rbind(hourdata,data.frame(dt,ask,bid,ask.vol,bid.vol))
-        #print(hourdata)
-        allmilli <- readBin(data,integer(),endian="big")
-        i <- as.integer(i+1)
-        if( is.na(allmilli[1]) ) {break}
-      }
-      close(data)
-      daydata <- rbind(daydata,hourdata)
+      eurjpy.dukascopy <- rbind(eurjpy.dukascopy,daydata)
     }
-    eurjpy.dukascopy <- rbind(eurjpy.dukascopy,daydata)
   }
 }

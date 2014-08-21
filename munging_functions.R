@@ -20,6 +20,7 @@ load_from_binary <- function(pair,currency.precision) {
     
   ticks <- data.frame()
   options(digits.secs = 3)
+  options(digits=13)
   
   for( y in 2014) {
     for( month in 0:7) {
@@ -43,7 +44,87 @@ load_from_binary <- function(pair,currency.precision) {
           alld <- readBin(data,what=raw(),n=fileSize) 
           numRec <- fileSize/(4*5)
           dim(alld) <- c(4*5,numRec)
+          
           dt=readBin(alld[1:4,],what="integer",size=4,endian="big",n=numRec)
+          
+          minute_  = dt %/% 60000
+          seconds_ = (dt %/% 1000) %% 60
+          mil_ = dt%%1000
+          
+          dts <- paste(y,
+                       realMonth,
+                       d,
+                       ' ',
+                       h,
+                       ':',
+                       str_pad(minute_,2,pad='0'),
+                       ':',
+                       str_pad(seconds_,2,pad='0'),
+                       '.',
+                       str_pad(mil_,3,pad='0'),
+                       sep='')
+          
+          epoch <- unclass(as.POSIXct(strptime(dts,"%Y%m%d %H:%M:%OS")))
+          ask=readBin(alld[5:8,],what="integer",size=4,endian="big",n=numRec)/currency.precision
+          bid=readBin(alld[9:12,],what="integer",size=4,endian="big",n=numRec)/currency.precision
+          spread=ask-bid
+          
+          hourdata <- data.frame(ts=dts,
+                                 epoch=epoch,
+                                 year=y,
+                                 month=month+1,
+                                 day=day,
+                                 hour=hour,
+                                 minute=minute_,
+                                 sec=seconds_,
+                                 mil=mil_,
+                                 ask=ask,
+                                 bid=bid,
+                                 spread=spread,
+                                 ask.vol=readBin(alld[13:16,],what="numeric",size=4,endian="big",n=numRec),
+                                 bid.vol=readBin(alld[17:20,],what="numeric",size=4,endian="big",n=numRec),
+                                 stringsAsFactors=FALSE)
+          close(data)
+          daydata <- rbind(daydata,hourdata)
+        }
+        monthdata <- rbind(monthdata,daydata)
+      }
+      ticks <- rbind(ticks,monthdata)
+    }
+  }
+  return(ticks)
+}
+
+load_from_binary_light <- function(pair,currency.precision) {
+  
+  ticks <- data.frame()
+  options(digits.secs = 3)
+  options(digits=13)
+  
+  for( y in 2014) {
+    for( month in 0:7) {
+      m <- str_pad(month,2,pad='0')
+      monthdata <- data.frame()
+      for(day in 1:31)  {
+        daydata <- data.frame()
+        d <- str_pad(day,2,pad='0')  
+        for( hour in 0:23) {
+          # increment month value for our own bookeeping (Dukascopy counts months of the year starting at zero)  
+          h <- str_pad(hour,2,pad='0')
+          realMonth <- str_pad(month+1,2,pad='0')
+          dradix <- paste('./dukascopy/',pair,'_',y,realMonth,d,'_',h,sep='')
+          if(!file.exists(dradix)) {
+            next
+          }
+          print(dradix)
+          
+          fileSize <- file.info(dradix)$size
+          data <- file(dradix,'rb')
+          alld <- readBin(data,what=raw(),n=fileSize) 
+          numRec <- fileSize/(4*5)
+          dim(alld) <- c(4*5,numRec)
+          
+          dt = readBin(alld[1:4,],what="integer",size=4,endian="big",n=numRec)
           
           dts <- paste(y,
                        realMonth,
@@ -55,21 +136,24 @@ load_from_binary <- function(pair,currency.precision) {
                        ':',
                        str_pad((dt %/% 1000) %% 60,2,pad='0'),
                        '.',
-                       str_pad(dt %% 1000,3,pad='0'),
+                       str_pad(dt%%1000,3,pad='0'),
                        sep='')
           
-          hourdata <- data.frame(ts=dts,
-                                 year=y,
-                                 month=month+1,
-                                 day=day,
-                                 hour=hour,
-                                 minute=dt %/% 60000,
-                                 sec=(dt %/% 1000) %% 60,
-                                 mil=dt%%1000,
-                                 ask=readBin(alld[5:8,],what="integer",size=4,endian="big",n=numRec)/currency.precision,
-                                 bid=readBin(alld[9:12,],what="integer",size=4,endian="big",n=numRec)/currency.precision,
+          epoch <- unclass(as.POSIXct(strptime(dts,"%Y%m%d %H:%M:%OS")))
+          
+          ask=readBin(alld[5:8,],what="integer",size=4,endian="big",n=numRec)/currency.precision
+          
+          bid=readBin(alld[9:12,],what="integer",size=4,endian="big",n=numRec)/currency.precision
+          
+          spread=ask-bid
+          
+          hourdata <- data.frame(epoch=epoch,
+                                 ask=ask,
+                                 bid=bid,
+                                 spread=spread,
                                  ask.vol=readBin(alld[13:16,],what="numeric",size=4,endian="big",n=numRec),
-                                 bid.vol=readBin(alld[17:20,],what="numeric",size=4,endian="big",n=numRec))
+                                 bid.vol=readBin(alld[17:20,],what="numeric",size=4,endian="big",n=numRec),
+                                 stringsAsFactors=FALSE)
           close(data)
           daydata <- rbind(daydata,hourdata)
         }
@@ -80,3 +164,57 @@ load_from_binary <- function(pair,currency.precision) {
   }
   return(ticks)
 }
+
+
+bestBuyForwardWindow <- function(currencyData, currency.precision) {
+  
+  nSamples <- 3600*24
+  nRecords <- nrow(currencyData)
+  maxForwardWindow <- 5000
+  maxBackwardWindow <- 5000
+  trainingRows <- sample((maxBackwardWindow+1):(nRecords-maxForwardWindow-1),nSamples)
+  
+  q95 <- NULL
+  
+  for( forwardWindow in seq(100,maxForwardWindow,100) ) {
+    currency.s <- currencyData[trainingRows,]
+    currency.f <- currencyData[trainingRows + forwardWindow,]
+    buyProfit <- (currency.f$bid - currency.s$ask)*currency.precision
+    q95[forwardWindow] <- quantile(buyProfit,probs=c(95)/100)
+    if(q95[forwardWindow] >= 10) {
+      break
+    }
+  }
+  
+  return(forwardWindow)
+}
+
+bestSellForwardWindow <- function(currencyData, currency.precision) {
+  
+  nSamples <- 3600*24
+  nRecords <- nrow(currencyData)
+  maxForwardWindow <- 5000
+  maxBackwardWindow <- 5000
+  trainingRows <- sample((maxBackwardWindow+1):(nRecords-maxForwardWindow-1),nSamples)
+  
+  q95 <- NULL
+  
+  for( forwardWindow in seq(100,maxForwardWindow,100) ) {
+    currency.s <- currencyData[trainingRows,]
+    currency.f <- currencyData[trainingRows + forwardWindow,]
+    sellProfit <- (currency.f$ask - currency.s$bid)*currency.precision
+    q95[forwardWindow] <- quantile(sellProfit,probs=c(95)/100)
+    if(q95[forwardWindow] >= 10) {
+      break
+    }
+  }
+  
+  return(forwardWindow)
+}
+
+
+
+
+
+
+

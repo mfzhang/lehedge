@@ -16,6 +16,7 @@ head(all_timestamps)
 common_timestamps <- all_timestamps[all_timestamps$ts > maxmin & all_timestamps$ts < minmax,]
 head(common_timestamps)
 nSamples <- 100
+
 s <- sort(sample(common_timestamps,nSamples))
 
 rgb <- NULL

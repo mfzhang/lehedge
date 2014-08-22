@@ -316,7 +316,16 @@ build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
   return(currency.lastQuote)  
 }
 
-
+write_pngs <- function(red,green,blue) {
+  nSamples <- dim(red)[2]
+  for( i in 1:nSamples) {
+    img      <- array(data=NA,dim=c(75,40,3))
+    img[,,1] <- matrix(red[,i],ncol=40,byrow=TRUE)
+    img[,,2] <- matrix(green[,i],ncol=40,byrow=TRUE)
+    img[,,3] <- matrix(blue[,i],ncol=40,byrow=TRUE)
+    writePNG(image=img,target=paste('img/training-',i,'.png'))
+  }
+}
 
 
 

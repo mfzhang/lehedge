@@ -66,7 +66,17 @@ USDJPY.buy.profit <- 100*(USDJPY.lastQuote[1,]-USDJPY.training[backwardWindow,])
 ALL.buy.profit <- EURUSD.buy.profit + EURJPY.buy.profit + USDJPY.buy.profit
 summary(ALL.buy.profit)
 hist(ALL.buy.profit,breaks=100)
+
 totalAvgSpread <- mean(EURJPY.raw$spread*100) + mean(EURUSD.raw$spread*10000) + mean(USDJPY.raw$spread*100)
 print(totalAvgSpread)
-EURJPY.raw$spread[100000:100010]
-EURUSD.raw$spread[1000:1010]
+
+EURJPY.ask.scaled.sigmoid <- 1/(1+exp(-EURJPY.ask.scaled[,1:nSamples]))
+EURUSD.ask.scaled.sigmoid <- 1/(1+exp(-EURUSD.ask.scaled[,1:nSamples]))
+USDJPY.ask.scaled.sigmoid <- 1/(1+exp(-USDJPY.ask.scaled[,1:nSamples]))
+
+# 3000 pixels = 75*40 (golden ratio)
+write_pngs(EURUSD.ask.scaled.sigmoid,
+           EURJPY.ask.scaled.sigmoid,
+           USDJPY.ask.scaled.sigmoid)
+
+

@@ -1,36 +1,72 @@
-currencyData <- EURUSD.ticks
-nSamples <- 3600*24
-nRecords <- nrow(currencyData)
-maxForwardWindow <- 5000
-maxBackwardWindow <- 5000
-maxBestBuyForwardWindow <- 1500
-trainingRows <- sample((maxBackwardWindow+1):(nRecords-maxForwardWindow-1),nSamples)
-trainingStartPoints <- currencyData[trainingRows,]
+source('munging_functions.R')
 options(digits.secs = 3)
 options(digits = 13)
-referenceTimes <- sort(trainingStartPoints$epoch)
-rt <- data.frame(epoch=referenceTimes,training=rep(1,length(referenceTimes)))
-EURJPY.ext <- merge(EURJPY.ticks,rt,by.x="epoch",by.y="epoch",all.x=TRUE,all.y=TRUE)
-rn <- as.numeric(row.names(EURJPY.ext[!is.na(EURJPY.ext$training),]))# & is.na(EURJPY.ext$ask)
-rnPlusOne <- rn+1
-rn3000 <- rn + 2*maxBestBuyForwardWindow
-trainingData <- matrix(nrow=nSamples,ncol=2*maxBestBuyForwardWindow)
-i <- 1
-for( i in 1:length(rn)){ 
-  print(rn[i])
-  startingRow <- rn[i]
-  endRow <- rn3000[i]
-  rec <- EURJPY.ext[startingRow:(endRow-1),"ask"]
-  noNAs <- !is.na(rec)
-  s <- rec[noNAs]
-  j <- 0
-  while(length(s) < 2*maxBestBuyForwardWindow){
-    rec <- c(s,EURJPY.ext[endRow+j,"ask"])
-    noNAs <- !is.na(rec)
-    s <- rec[noNAs]
-    j <- j+1
-  }
-  trainingData[i,] <- s
-  i <- i+1
-}
 
+minEpoch <- max(min(EURUSD.ticks$epoch),
+                min(EURJPY.ticks$epoch),
+                min(USDJPY.ticks$epoch))
+
+maxEpoch <- min(max(EURUSD.ticks$epoch),
+                max(EURJPY.ticks$epoch),
+                max(USDJPY.ticks$epoch))
+
+EURUSD.raw <- EURUSD.ticks[EURUSD.ticks$epoch >= minEpoch & EURUSD.ticks$epoch < maxEpoch,]
+EURJPY.raw <- EURJPY.ticks[EURJPY.ticks$epoch >= minEpoch & EURJPY.ticks$epoch < maxEpoch,]
+USDJPY.raw <- USDJPY.ticks[USDJPY.ticks$epoch >= minEpoch & USDJPY.ticks$epoch < maxEpoch,]
+
+# use one of the datasets to sample reference times
+currencyData <- EURUSD.raw
+
+nSamples <- 3600*24
+nRecords <- min(nrow(EURJPY.raw),nrow(EURUSD.raw),nrow(USDJPY.raw))
+
+# computed in earlier step
+maxBestBuyForwardWindow <- 1500
+
+# what we learn from
+backwardWindow <- 2*maxBestBuyForwardWindow
+forwardWindow  <- maxBestBuyForwardWindow
+
+trainingRows <- sort(sample(1:(nRecords-forwardWindow-backwardWindow-1),nSamples))
+trainingStartPoints <- currencyData[trainingRows,]
+referenceTimes <- data.frame(epoch = trainingStartPoints$epoch,
+                             training = rep(1,nrow(trainingStartPoints)))
+
+# this magically interleaves the target currency timestamps
+# and the reference times while flagging those
+#for( currencyData in c(EURUSD.raw,EURJPY.raw,USDJPY.raw)) { 
+
+EURUSD.ext <- merge_ref_times(EURUSD.raw, referenceTimes)
+EURJPY.ext <- merge_ref_times(EURJPY.raw, referenceTimes)
+USDJPY.ext <- merge_ref_times(USDJPY.raw, referenceTimes)
+
+EURUSD.ask.training <- build_training_set(EURUSD.ext,referenceTimes, nSamples, backwardWindow)
+EURJPY.ask.training <- build_training_set(EURJPY.ext,referenceTimes, nSamples, backwardWindow)
+USDJPY.ask.training <- build_training_set(USDJPY.ext,referenceTimes, nSamples, backwardWindow)
+
+EURUSD.ask.scaled <- scale(EURUSD.ask.training)
+EURJPY.ask.scaled <- scale(EURJPY.ask.training)
+USDJPY.ask.scaled <- scale(USDJPY.ask.training)
+
+EURUSD.firstQuote <- build_first_quote(EURUSD.ext, backwardWindow)
+EURJPY.firstQuote <- build_first_quote(EURJPY.ext, backwardWindow)
+USDJPY.firstQuote <- build_first_quote(USDJPY.ext, backwardWindow)
+
+EURUSD.lastQuote <- build_last_quote(EURUSD.ext, backwardWindow, forwardWindow)
+EURJPY.lastQuote <- build_last_quote(EURJPY.ext, backwardWindow, forwardWindow)
+USDJPY.lastQuote <- build_last_quote(USDJPY.ext, backwardWindow, forwardWindow)
+
+# compute profit : buy at ask price, sell at bid price
+options(digits = 2)
+EURUSD.buy.profit <- 10000*(EURUSD.lastQuote[1,]-EURUSD.training[backwardWindow,])
+options(digits = 5)
+EURJPY.buy.profit <- 100*(EURJPY.lastQuote[1,]-EURJPY.training[backwardWindow,])
+USDJPY.buy.profit <- 100*(USDJPY.lastQuote[1,]-USDJPY.training[backwardWindow,])
+
+ALL.buy.profit <- EURUSD.buy.profit + EURJPY.buy.profit + USDJPY.buy.profit
+summary(ALL.buy.profit)
+hist(ALL.buy.profit,breaks=100)
+totalAvgSpread <- mean(EURJPY.raw$spread*100) + mean(EURUSD.raw$spread*10000) + mean(USDJPY.raw$spread*100)
+print(totalAvgSpread)
+EURJPY.raw$spread[100000:100010]
+EURUSD.raw$spread[1000:1010]

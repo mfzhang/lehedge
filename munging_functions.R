@@ -212,6 +212,109 @@ bestSellForwardWindow <- function(currencyData, currency.precision) {
   return(forwardWindow)
 }
 
+build_training_set <- function(currency.ext,referenceTimes,nSamples,backwardWindow) {
+    
+  # identify reference times in the target dataset
+  currency.refTimesRows <- as.numeric(row.names(currency.ext[!is.na(currency.ext$training),]))
+  
+  currency.refTimesRowsEnd <- currency.refTimesRows + backwardWindow
+  
+  # to avoid transpose when scaling
+  currency.training <- matrix(nrow=backwardWindow,ncol=nSamples)
+  
+  i <- 1
+  for( i in 1:length(currency.refTimesRows)){ 
+    startingRow <- currency.refTimesRows[i]
+    print(startingRow)
+    endRow <- currency.refTimesRowsEnd[i]
+    rec <- currency.ext[startingRow:(endRow-1),"ask"]
+    noNAs <- !is.na(rec)
+    s <- rec[noNAs]
+    j <- 0
+    while(length(s) < backwardWindow & (endRow+j<nrow(currency.ext))){
+      rec <- c(s,currency.ext[endRow+j,"ask"])
+      noNAs <- !is.na(rec)
+      s <- rec[noNAs]
+      j <- j+1
+    }
+    currency.training[,i] <- s
+    i <- i+1
+  }
+  return(currency.training)  
+}
+
+merge_ref_times <- function(currency.raw,referenceTimes){
+  
+  # this magically interleaves the target currency timestamps
+  # and the reference times while flagging those
+  #for( currencyData in c(EURUSD.raw,EURJPY.raw,USDJPY.raw)) { 
+  
+  currency.ext <- merge(currency.raw,referenceTimes,by.x="epoch",by.y="epoch",all.x=TRUE,all.y=TRUE)
+  return(currency.ext)
+  
+}
+
+build_first_quote <- function(currency.ext,backwardWindow) {
+  
+  # identify reference times in the target dataset
+  currency.refTimesRows <- as.numeric(row.names(currency.ext[!is.na(currency.ext$training),]))
+  
+  currency.refTimesRowsEnd <- currency.refTimesRows + backwardWindow
+  
+  # to avoid transpose when scaling
+  currency.firstQuote <- matrix(nrow=2,ncol=nSamples)
+  
+  i <- 1
+  for( i in 1:length(currency.refTimesRows)){ 
+    startingRow <- currency.refTimesRows[i]
+    print(startingRow)
+    endRow <- currency.refTimesRowsEnd[i]
+    asks <- currency.ext[startingRow:(endRow-1),"ask"]
+    asks.nona <- asks[!is.na(asks)]
+    j <- 0
+    while( length(asks.nona) < backwardWindow & (endRow+j<nrow(currency.ext))){
+      asks <- c(asks.nona, currency.ext[endRow+j,"ask"])
+      asks.nona <- asks[!is.na(asks)]
+      j <- j+1
+    }
+    currency.firstQuote[1,i] <- currency.ext[endRow+j,"bid"]
+    currency.firstQuote[2,i] <- currency.ext[endRow+j,"ask"]    
+    i <- i+1
+  }
+  return(currency.firstQuote)  
+}
+
+
+
+build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
+  
+  # identify reference times in the target dataset
+  currency.refTimesRows <- as.numeric(row.names(currency.ext[!is.na(currency.ext$training),]))
+  
+  currency.refTimesRowsEnd <- currency.refTimesRows + backwardWindow + forwardWindow - 1
+  
+  # to avoid transpose when scaling
+  currency.lastQuote <- matrix(nrow=2,ncol=nSamples)
+  
+  i <- 1
+  for( i in 1:length(currency.refTimesRows)){ 
+    startingRow <- currency.refTimesRows[i]
+    print(startingRow)
+    endRow <- currency.refTimesRowsEnd[i]
+    asks <- currency.ext[startingRow:endRow,"ask"]
+    asks.nona <- asks[!is.na(asks)]
+    j <- 1
+    while( length(asks.nona) < (backwardWindow+forwardWindow) & ((endRow+j)<nrow(currency.ext))){
+      asks <- c(asks.nona, currency.ext[endRow+j,"ask"])
+      asks.nona <- asks[!is.na(asks)]
+      j <- j+1
+    }
+    currency.lastQuote[1,i] <- currency.ext[endRow+j-1,"bid"]
+    currency.lastQuote[2,i] <- currency.ext[endRow+j-1,"ask"]    
+    i <- i+1
+  }
+  return(currency.lastQuote)  
+}
 
 
 

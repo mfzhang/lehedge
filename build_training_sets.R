@@ -2,6 +2,8 @@ source('munging_functions.R')
 options(digits.secs = 3)
 options(digits = 13)
 
+profit.target <- 30
+
 minEpoch <- max(min(EURUSD.ticks$epoch),
                 min(EURJPY.ticks$epoch),
                 min(USDJPY.ticks$epoch))
@@ -63,7 +65,14 @@ options(digits = 5)
 EURJPY.buy.profit <- 100*(EURJPY.lastQuote[1,]-EURJPY.training[backwardWindow,])
 USDJPY.buy.profit <- 100*(USDJPY.lastQuote[1,]-USDJPY.training[backwardWindow,])
 
-ALL.buy.profit <- EURUSD.buy.profit + EURJPY.buy.profit + USDJPY.buy.profit
+buy.profit <- data.frame(eurusd=EURUSD.buy.profit,
+                         eurjpy=EURJPY.buy.profit,
+                         usdjpy=USDJPY.buy.profit,
+                         p=(EURUSD.buy.profit + EURJPY.buy.profit + USDJPY.buy.profit))
+
+buy.profit.positive <- buy.profit[buy.profit$p > profit.target,,drop=FALSE]
+row.names(ALL.profit.positive)
+
 summary(ALL.buy.profit)
 hist(ALL.buy.profit,breaks=100)
 

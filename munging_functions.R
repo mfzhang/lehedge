@@ -323,7 +323,7 @@ write_pngs <- function(red,green,blue) {
     img[,,1] <- matrix(red[,i],ncol=40,byrow=TRUE)
     img[,,2] <- matrix(green[,i],ncol=40,byrow=TRUE)
     img[,,3] <- matrix(blue[,i],ncol=40,byrow=TRUE)
-    writePNG(image=img,target=paste('img/training-',i,'.png'))
+    writePNG(image=img,target=paste('img/training-',i,'.png',sep=''))
   }
 }
 

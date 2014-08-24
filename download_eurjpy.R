@@ -2,8 +2,8 @@ library(stringr)
 
 options(digits.secs = 3)
 
-for( month in 0:7) {
-  for(day in 1:31)  {
+for( month in 7:7) {
+  for(day in 14:31)  {
     daydata <- data.frame()
     for( hour in 0:23) {
       # increment month value for our own bookeeping (Dukascopy counts months of the year starting at zero)

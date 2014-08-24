@@ -4,6 +4,7 @@ options(digits = 13)
 
 profit.target <- 30
 
+
 minEpoch <- max(min(EURUSD.ticks$epoch),
                 min(EURJPY.ticks$epoch),
                 min(USDJPY.ticks$epoch))
@@ -50,9 +51,9 @@ EURUSD.ask.scaled <- scale(EURUSD.ask.training)
 EURJPY.ask.scaled <- scale(EURJPY.ask.training)
 USDJPY.ask.scaled <- scale(USDJPY.ask.training)
 
-EURUSD.firstQuote <- build_first_quote(EURUSD.ext, backwardWindow)
-EURJPY.firstQuote <- build_first_quote(EURJPY.ext, backwardWindow)
-USDJPY.firstQuote <- build_first_quote(USDJPY.ext, backwardWindow)
+#EURUSD.firstQuote <- build_first_quote(EURUSD.ext, backwardWindow)
+#EURJPY.firstQuote <- build_first_quote(EURJPY.ext, backwardWindow)
+#USDJPY.firstQuote <- build_first_quote(USDJPY.ext, backwardWindow)
 
 EURUSD.lastQuote <- build_last_quote(EURUSD.ext, backwardWindow, forwardWindow)
 EURJPY.lastQuote <- build_last_quote(EURJPY.ext, backwardWindow, forwardWindow)
@@ -60,11 +61,18 @@ USDJPY.lastQuote <- build_last_quote(USDJPY.ext, backwardWindow, forwardWindow)
 
 # compute profit : buy at ask price, sell at bid price
 options(digits = 2)
-EURUSD.buy.profit <- 10000*(EURUSD.lastQuote[1,]-EURUSD.training[backwardWindow,])
+EURUSD.buy.profit <- 10000*(EURUSD.lastQuote[1,]-EURUSD.ask.training[backwardWindow,])
 options(digits = 5)
-EURJPY.buy.profit <- 100*(EURJPY.lastQuote[1,]-EURJPY.training[backwardWindow,])
-USDJPY.buy.profit <- 100*(USDJPY.lastQuote[1,]-USDJPY.training[backwardWindow,])
+EURJPY.buy.profit <- 100*(EURJPY.lastQuote[1,]-EURJPY.ask.training[backwardWindow,])
+USDJPY.buy.profit <- 100*(USDJPY.lastQuote[1,]-USDJPY.ask.training[backwardWindow,])
 
+
+totalAvgSpread <- mean(EURJPY.raw$spread*100) + mean(EURUSD.raw$spread*10000) + mean(USDJPY.raw$spread*100)
+print(totalAvgSpread)
+
+individual.profit.target <- 10 + totalAvgSpread
+
+#options(digits = 13)
 buy.profit <- data.frame(eurusd=EURUSD.buy.profit,
                          eurjpy=EURJPY.buy.profit,
                          usdjpy=USDJPY.buy.profit,
@@ -73,11 +81,12 @@ buy.profit <- data.frame(eurusd=EURUSD.buy.profit,
 buy.profit.positive <- buy.profit[buy.profit$p > profit.target,,drop=FALSE]
 row.names(ALL.profit.positive)
 
+buy.profit.tenOrMoreAllThree <- buy.profit[  buy.profit$eurusd > individual.profit.target &
+                                             buy.profit$eurjpy > individual.profit.target &
+                                             buy.profit$usdjpy > individual.profit.target,, drop=FALSE]
+
 summary(ALL.buy.profit)
 hist(ALL.buy.profit,breaks=100)
-
-totalAvgSpread <- mean(EURJPY.raw$spread*100) + mean(EURUSD.raw$spread*10000) + mean(USDJPY.raw$spread*100)
-print(totalAvgSpread)
 
 EURJPY.ask.scaled.sigmoid <- 1/(1+exp(-EURJPY.ask.scaled[,1:nSamples]))
 EURUSD.ask.scaled.sigmoid <- 1/(1+exp(-EURUSD.ask.scaled[,1:nSamples]))

@@ -47,7 +47,7 @@ write.table(x=buy.profit[,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="lehedge_buy_training.txt")
+            file="buyside/lehedge_buy_training.txt")
 
 totalProfit <- sum(
   sum(buy.profit[  buy.profit$eurusd >= u  &

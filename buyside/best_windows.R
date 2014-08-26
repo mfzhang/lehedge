@@ -1,5 +1,3 @@
-source('munging_functions.R')
-
 maxEURUSD <- bestBuyForwardWindow(EURUSD.ticks,10000)
 print(paste("EURUSD=",maxEURUSD))
 

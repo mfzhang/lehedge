@@ -47,7 +47,7 @@ write.table(x=sell.profit[,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="lehedge_sell_training.txt")
+            file="sellside/lehedge_sell_training.txt")
 
 totalProfit <- sum(
   sum(sell.profit[  sell.profit$eurusd <= u  &

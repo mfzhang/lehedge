@@ -1,4 +1,3 @@
-source('munging_functions.R')
 
 options(digits.secs = 3)
 options(digits = 13)

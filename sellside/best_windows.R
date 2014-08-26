@@ -1,4 +1,3 @@
-source('~/PycharmProjects/lehedge/common/munging_functions.R')
 
 maxEURUSD <- bestSellForwardWindow(EURUSD.ticks,10000)
 print(paste("EURUSD=",maxEURUSD))

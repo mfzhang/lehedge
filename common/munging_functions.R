@@ -317,12 +317,22 @@ build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
 }
 
 write_pngs <- function(red,green,blue) {
+  
+  library(png)
+  
   nSamples <- dim(red)[2]
+  pixels <- dim(red)[1]
+  
+  library(rPython)
+  python.load('goldendims.py')
+  python.exec(paste("mygd = GoldenRectangle(",pixels,").dimensions()",.sep=''))
+  imageSize <- python.get("mygd")
+  
   for( i in 1:nSamples) {
-    img      <- array(data=NA,dim=c(75,40,3))
-    img[,,1] <- matrix(red[,i],ncol=40,byrow=TRUE)
-    img[,,2] <- matrix(green[,i],ncol=40,byrow=TRUE)
-    img[,,3] <- matrix(blue[,i],ncol=40,byrow=TRUE)
+    img      <- array(data=NA,dim=c(imageSize[1],imageSize[2],3))
+    img[,,1] <- matrix(red[,i],ncol=imageSize[2],byrow=TRUE)
+    img[,,2] <- matrix(green[,i],ncol=imageSize[2],byrow=TRUE)
+    img[,,3] <- matrix(blue[,i],ncol=imageSize[2],byrow=TRUE)
     writePNG(image=img,target=paste('img/training-',i,'.png',sep=''))
   }
 }

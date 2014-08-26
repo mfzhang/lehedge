@@ -16,9 +16,9 @@ EURUSD.buy.ext <- merge_ref_times(EURUSD.raw, referenceTimes)
 EURJPY.buy.ext <- merge_ref_times(EURJPY.raw, referenceTimes)
 USDJPY.buy.ext <- merge_ref_times(USDJPY.raw, referenceTimes)
 
-EURUSD.ask.training <- build_training_set(EURUSD.buy.ext,referenceTimes, nSamples, backwardWindow)
-EURJPY.ask.training <- build_training_set(EURJPY.buy.ext,referenceTimes, nSamples, backwardWindow)
-USDJPY.ask.training <- build_training_set(USDJPY.buy.ext,referenceTimes, nSamples, backwardWindow)
+EURUSD.ask.training <- build_training_set("ask",EURUSD.buy.ext,referenceTimes, nSamples, backwardWindow)
+EURJPY.ask.training <- build_training_set("ask",EURJPY.buy.ext,referenceTimes, nSamples, backwardWindow)
+USDJPY.ask.training <- build_training_set("ask",USDJPY.buy.ext,referenceTimes, nSamples, backwardWindow)
 
 EURUSD.ask.scaled <- scale(EURUSD.ask.training)
 EURJPY.ask.scaled <- scale(EURJPY.ask.training)

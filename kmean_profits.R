@@ -16,7 +16,7 @@ tail(d)
 
 df <- scale(d)
   
-wssplot <- function(data, nc=15, seed=1234) {
+wssplot <- function(data, nc=15, seed=51234) {
     wss <- (nrow(data)-1)*sum(apply(data,2,var))
     for (i in 2:nc) {
       set.seed(seed)
@@ -26,11 +26,13 @@ wssplot <- function(data, nc=15, seed=1234) {
                               ylab="Within groups sum of squares")
 }
 
-wssplot(df)
+buy.profit.scaled <- scale(buy.profit.sample[,c("eurusd","eurjpy","usdjpy")])
+wssplot(buy.profit.scaled)
+#wssplot(df)
 
 library(NbClust)
-set.seed(1234)
-nc <- NbClust(df, min.nc=2, max.nc=15, method="kmeans")
+set.seed(51234)
+nc <- NbClust(buy.profit.scaled, min.nc=2, max.nc=27, method="kmeans")
 table(nc$Best.n[1,])
 barplot(table(nc$Best.n[1,]), 
         xlab="Numer of Clusters", ylab="Number of Criteria",

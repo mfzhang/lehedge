@@ -17,7 +17,7 @@ createPkStr <- function(d) {
 }
 
 load_from_binary <- function(pair,currency.precision) {
-    
+  
   ticks <- data.frame()
   options(digits.secs = 3)
   options(digits=13)
@@ -213,7 +213,7 @@ bestSellForwardWindow <- function(currencyData, currency.precision) {
 }
 
 build_training_set <- function(side="ask",currency.ext,referenceTimes,nSamples,backwardWindow) {
-    
+  
   # identify reference times in the target dataset
   currency.refTimesRows <- as.numeric(row.names(currency.ext[!is.na(currency.ext$training),]))
   

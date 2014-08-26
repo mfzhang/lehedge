@@ -316,7 +316,7 @@ build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
   return(currency.lastQuote)  
 }
 
-write_pngs <- function(red,green,blue) {
+write_pngs <- function(prefix,red,green,blue) {
   
   library(png)
   
@@ -333,7 +333,7 @@ write_pngs <- function(red,green,blue) {
     img[,,1] <- matrix(red[,i],ncol=imageSize[2],byrow=TRUE)
     img[,,2] <- matrix(green[,i],ncol=imageSize[2],byrow=TRUE)
     img[,,3] <- matrix(blue[,i],ncol=imageSize[2],byrow=TRUE)
-    writePNG(image=img,target=paste('img/training-',i,'.png',sep=''))
+    writePNG(image=img,target=paste(prefix,'/img/training-',i,'.png',sep=''))
   }
 }
 

@@ -44,7 +44,8 @@ EURJPY.bid.scaled.sigmoid <- 1/(1+exp(-EURJPY.bid.scaled[,1:nSamples]))
 EURUSD.bid.scaled.sigmoid <- 1/(1+exp(-EURUSD.bid.scaled[,1:nSamples]))
 USDJPY.bid.scaled.sigmoid <- 1/(1+exp(-USDJPY.bid.scaled[,1:nSamples]))
 
-write_pngs(EURUSD.bid.scaled.sigmoid,
+write_pngs('sellside',
+           EURUSD.bid.scaled.sigmoid,
            EURJPY.bid.scaled.sigmoid,
            USDJPY.bid.scaled.sigmoid)
 

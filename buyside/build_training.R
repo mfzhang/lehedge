@@ -45,9 +45,17 @@ EURJPY.ask.scaled.sigmoid <- 1/(1+exp(-EURJPY.ask.scaled[,1:nSamples]))
 EURUSD.ask.scaled.sigmoid <- 1/(1+exp(-EURUSD.ask.scaled[,1:nSamples]))
 USDJPY.ask.scaled.sigmoid <- 1/(1+exp(-USDJPY.ask.scaled[,1:nSamples]))
 
-write_pngs('buyside',
-           EURUSD.ask.scaled.sigmoid,
-           EURJPY.ask.scaled.sigmoid,
-           USDJPY.ask.scaled.sigmoid)
+split_data <- sample(1:nSamples,0.15*nSamples)
 
+write_pngs('buyside/img/train/file',
+           EURUSD.ask.scaled.sigmoid[-split_data],
+           EURJPY.ask.scaled.sigmoid[-split_data],
+           USDJPY.ask.scaled.sigmoid[-split_data])
 
+write_pngs('buyside/img/val/file',
+           EURUSD.ask.scaled.sigmoid[split_data],
+           EURJPY.ask.scaled.sigmoid[split_data],
+           USDJPY.ask.scaled.sigmoid[split_data])
+
+  
+  

@@ -41,15 +41,15 @@ buy.profit.counts <- table(buy.profit$label)
 
 sum(buy.profit.counts[2:8])
 
-buy.profit$filename <- paste("training-",row.names(buy.profit),".png",sep="")
+buy.profit$filename <- paste("file-",row.names(buy.profit),".png",sep="")
 
-write.table(x=buy.profit[-split_data,c("filename","label")],
+write.table(x=buy.profit[-buy.validation,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
             file="buyside/lehedge_buy_training.txt")
 
-write.table(x=buy.profit[split_data,c("filename","label")],
+write.table(x=buy.profit[buy.validation,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,

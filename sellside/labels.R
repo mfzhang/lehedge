@@ -41,13 +41,19 @@ sell.profit.counts <- table(sell.profit$label)
 
 sum(sell.profit.counts[2:8])
 
-sell.profit$filename <- paste("training-",row.names(sell.profit),".png",sep="")
+sell.profit$filename <- paste("file-",row.names(sell.profit),".png",sep="")
 
-write.table(x=sell.profit[,c("filename","label")],
+write.table(x=sell.profit[-sell.validation,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
             file="sellside/lehedge_sell_training.txt")
+
+write.table(x=sell.profit[sell.validation,c("filename","label")],
+            quote=FALSE,
+            row.names=FALSE,
+            col.names=FALSE,
+            file="sellside/lehedge_sell_val.txt")
 
 totalProfit <- sum(
   sum(sell.profit[  sell.profit$eurusd <= u  &

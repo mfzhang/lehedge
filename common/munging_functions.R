@@ -316,11 +316,11 @@ build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
   return(currency.lastQuote)  
 }
 
-write_pngs <- function(prefix,red,green,blue) {
+write_pngs <- function(prefix,ids,red,green,blue) {
   
   library(png)
   
-  nSamples <- dim(red)[2]
+  nSamples <- length(ids) #dim(red)[2]
   pixels <- dim(red)[1]
   
   library(rPython)
@@ -330,10 +330,10 @@ write_pngs <- function(prefix,red,green,blue) {
   
   for( i in 1:nSamples) {
     img      <- array(data=NA,dim=c(imageSize[1],imageSize[2],3))
-    img[,,1] <- matrix(red[,i],ncol=imageSize[2],byrow=TRUE)
-    img[,,2] <- matrix(green[,i],ncol=imageSize[2],byrow=TRUE)
-    img[,,3] <- matrix(blue[,i],ncol=imageSize[2],byrow=TRUE)
-    writePNG(image=img,target=paste(prefix,'-',i,'.png',sep=''))
+    img[,,1] <- matrix(red[,ids[i]],ncol=imageSize[2],byrow=TRUE)
+    img[,,2] <- matrix(green[,ids[i]],ncol=imageSize[2],byrow=TRUE)
+    img[,,3] <- matrix(blue[,ids[i]],ncol=imageSize[2],byrow=TRUE)
+    writePNG(image=img,target=paste(prefix,'-',ids[i],'.png',sep=''))
   }
 }
 

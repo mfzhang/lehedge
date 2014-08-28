@@ -44,7 +44,17 @@ EURJPY.bid.scaled.sigmoid <- 1/(1+exp(-EURJPY.bid.scaled[,1:nSamples]))
 EURUSD.bid.scaled.sigmoid <- 1/(1+exp(-EURUSD.bid.scaled[,1:nSamples]))
 USDJPY.bid.scaled.sigmoid <- 1/(1+exp(-USDJPY.bid.scaled[,1:nSamples]))
 
-write_pngs('sellside',
+all_records <- 1:nSamples
+sell.validation <- sample(all_records,0.15*nSamples)
+
+write_pngs('sellside/img/train/file',
+           all_records[! all_records %in% sell.validation],
+           EURUSD.bid.scaled.sigmoid,
+           EURJPY.bid.scaled.sigmoid,
+           USDJPY.bid.scaled.sigmoid)
+
+write_pngs('sellside/img/val/file',
+           sell.validation,             
            EURUSD.bid.scaled.sigmoid,
            EURJPY.bid.scaled.sigmoid,
            USDJPY.bid.scaled.sigmoid)

@@ -9,18 +9,10 @@ layers {
   type: CONVOLUTION
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1
-  blobs_lr: 2
   convolution_param {
-    num_output: 20
-    kernel_size: 5
+    num_output: 100
+    kernel_size: 8
     stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layers {
@@ -30,7 +22,7 @@ layers {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 2
+    kernel_size: 5 
     stride: 2
   }
 }
@@ -39,18 +31,10 @@ layers {
   type: CONVOLUTION
   bottom: "pool1"
   top: "conv2"
-  blobs_lr: 1
-  blobs_lr: 2
   convolution_param {
-    num_output: 50
+    num_output: 250
     kernel_size: 5
     stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layers {
@@ -69,16 +53,8 @@ layers {
   type: INNER_PRODUCT
   bottom: "pool2"
   top: "ip1"
-  blobs_lr: 1
-  blobs_lr: 2
   inner_product_param {
     num_output: 500
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layers {
@@ -95,13 +71,7 @@ layers {
   blobs_lr: 1
   blobs_lr: 2
   inner_product_param {
-    num_output: 10
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
+    num_output: 8 
   }
 }
 layers {

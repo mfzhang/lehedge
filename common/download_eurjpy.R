@@ -22,7 +22,7 @@ for( month in 7:7) {
       print(uri)
       try(download.file(uri,destfile=dest,extra="-H 'Origin: http://freeserv.dukascopy.com' -H 'Accept-Encoding: gzip,deflate,sdch' -H 'Accept-Language: fr-FR,fr;q=0.8,en-US;q=0.6,en;q=0.4' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36' -H 'Accept: */*' -H 'Referer: http://freeserv.dukascopy.com/2.0/?path=historical_data_feed/index&width=100%25&height=600' -H 'Connection: keep-alive'",method='curl'))
       if(file.exists(dest)) {
-        try(system(paste('easylzma/build/easylzma-0.0.8/bin/unelzma',dest)))
+        try(system(paste('easylzma/build/easylzma/bin/unelzma',dest)))
       } 
     }
   }

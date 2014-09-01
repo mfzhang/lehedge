@@ -1,8 +1,8 @@
 name: "LeHedge"
 input: "data"
 input_dim: 120
-input_dim: 3
-input_dim: 75
+input_dim: 3 
+input_dim: 70 
 input_dim: 40
 layers {
   name: "conv1"
@@ -68,8 +68,6 @@ layers {
   type: INNER_PRODUCT
   bottom: "ip1"
   top: "ip2"
-  blobs_lr: 1
-  blobs_lr: 2
   inner_product_param {
     num_output: 8 
   }

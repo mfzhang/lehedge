@@ -33,7 +33,7 @@ load_from_binary <- function(pair,currency.precision) {
           # increment month value for our own bookeeping (Dukascopy counts months of the year starting at zero)  
           h <- str_pad(hour,2,pad='0')
           realMonth <- str_pad(month+1,2,pad='0')
-          dradix <- paste('./dukascopy/',pair,'_',y,realMonth,d,'_',h,sep='')
+          dradix <- paste('./ticks/',pair,'_',y,realMonth,d,'_',h,sep='')
           if(!file.exists(dradix)) {
             next
           }
@@ -112,7 +112,7 @@ load_from_binary_light <- function(pair,currency.precision) {
           # increment month value for our own bookeeping (Dukascopy counts months of the year starting at zero)  
           h <- str_pad(hour,2,pad='0')
           realMonth <- str_pad(month+1,2,pad='0')
-          dradix <- paste('./dukascopy/',pair,'_',y,realMonth,d,'_',h,sep='')
+          dradix <- paste('./ticks/',pair,'_',y,realMonth,d,'_',h,sep='')
           if(!file.exists(dradix)) {
             next
           }

@@ -1,3 +1,4 @@
+library(stringr)
 
 individual.profit.target <- 10
 
@@ -41,7 +42,8 @@ buy.profit.counts <- table(buy.profit$label)
 
 sum(buy.profit.counts[2:8])
 
-buy.profit$filename <- paste("file-",row.names(buy.profit),".png",sep="")
+paddedNames <- str_pad(row.names(buy.profit), 6, pad="0")
+buy.profit$filename <- paste("file-",paddedNames,".png",sep="")
 
 write.table(x=buy.profit[-buy.validation,c("filename","label")],
             quote=FALSE,

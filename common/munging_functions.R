@@ -327,6 +327,10 @@ write_pngs <- function(prefix,ids,red,green,blue) {
   python.load('goldendims.py')
   python.exec(paste("mygd = GoldenRectangle(",pixels,").dimensions()",.sep=''))
   imageSize <- python.get("mygd")
+
+  fileConn<-file(paste(prefix,"image_size",sep="/"))
+  writeLines(imageSize, fileConn)
+  close(fileConn)  
   
   for( i in 1:nSamples) {
     img      <- array(data=NA,dim=c(imageSize[1],imageSize[2],3))

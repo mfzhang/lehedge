@@ -329,7 +329,7 @@ write_pngs <- function(prefix,ids,red,green,blue) {
   imageSize <- python.get("mygd")
 
   fileConn<-file(paste(prefix,"image_size",sep="/"))
-  writeLines(imageSize, fileConn)
+  writeLines(paste(imageSize[1],imageSize[2]), fileConn)
   close(fileConn)  
   
   for( i in 1:nSamples) {

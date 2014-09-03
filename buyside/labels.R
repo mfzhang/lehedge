@@ -43,7 +43,7 @@ buy.profit.counts <- table(buy.profit$label)
 sum(buy.profit.counts[2:8])
 
 paddedNames <- str_pad(row.names(buy.profit), 6, pad="0")
-buy.profit$filename <- paste("file-",paddedNames,".png",sep="")
+buy.profit$filename <- paste(paddedNames,".png",sep="")
 
 write.table(x=buy.profit[-buy.validation,c("filename","label")],
             quote=FALSE,

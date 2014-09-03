@@ -337,7 +337,7 @@ write_pngs <- function(prefix,ids,red,green,blue) {
     img[,,1] <- matrix(red[,ids[i]],ncol=imageSize[2],byrow=TRUE)
     img[,,2] <- matrix(green[,ids[i]],ncol=imageSize[2],byrow=TRUE)
     img[,,3] <- matrix(blue[,ids[i]],ncol=imageSize[2],byrow=TRUE)
-    writePNG(image=img,target=paste(prefix,'-',ids[i],'.png',sep=''))
+    writePNG(image=img,target=paste(ids[i],'.png',sep=''))
   }
 }
 

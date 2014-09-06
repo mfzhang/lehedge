@@ -1,8 +1,6 @@
-# size of entire dataset
-nData <- nrow(all.rates)
 
 desiredSampleCount <- 1500000
-samplingRate <- round(nrow(all.rates)/desiredSampleCount,2)
+samplingRate <- round(desiredSampleCount/nData,2)
 
 # what we learn from
 backwardWindow <- 2*maxBestBuyForwardWindow
@@ -10,13 +8,9 @@ forwardWindow  <- maxBestBuyForwardWindow
 
 # identify margins to avoid tick depletion at initialization and end phase of sampling
 
-all.rates.100k.head <- all.rates[1:100000,]
-
 EURUSD.prefill <- findMinRow(all.rates.100k.head, "EURUSD", backwardWindow)
 EURJPY.prefill <- findMinRow(all.rates.100k.head, "EURJPY", backwardWindow)
 USDJPY.prefill <- findMinRow(all.rates.100k.head, "USDJPY", backwardWindow)
-
-all.rates.100k.tail <- all.rates[(nData-99999):nData,]
 
 EURUSD.postfill <- findMaxRow(all.rates.100k.tail, "EURUSD", forwardWindow)
 EURJPY.postfill <- findMaxRow(all.rates.100k.tail, "EURJPY", forwardWindow)
@@ -29,6 +23,10 @@ USDJPY.postfill <- findMaxRow(all.rates.100k.tail, "USDJPY", forwardWindow)
 minRow <- max(EURUSD.prefill,EURJPY.prefill,USDJPY.prefill)
 maxRow <- nData-max(EURUSD.postfill,EURJPY.postfill,USDJPY.postfill)+1
 
+minRow <- backwardWindow #max(EURUSD.prefill,EURJPY.prefill,USDJPY.prefill)
+maxRow <- nData-forwardWindow+1 #max(EURUSD.postfill,EURJPY.postfill,USDJPY.postfill)+1
+
+
 print(paste("head initialization row = ",minRow,sep=""))
 
 # let the sampling happen!!
@@ -36,7 +34,7 @@ print(paste("head initialization row = ",minRow,sep=""))
 # returns a vector of zeros and ones indicating the end points of time frames for all samples
 
 samplingIdx <- sort(sample(minRow:maxRow,replace=FALSE,size=round(samplingRate*nData)))
-stuff <- build_training_set_images("ask",backwardWindow,"buyside/img/",samplingIdx)
+build_training_set_images.v2("ask",backwardWindow,"buyside/img/",samplingIdx)
 
 # our looping adds one extra head, let's crop this 
 sampledf <- data.frame(s=sampled[1:nrow(all.rates)])

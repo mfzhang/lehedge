@@ -520,6 +520,18 @@ findMaxRow <- function(d, currency, forwardWindow) {
   return(i+forwardWindow-1) 
 }
 
+fillna <- function(col) {
+  red   <- all.rates[,col]
+  startPos <- head(which(!is.na(red[1:100000])),n=1)
+  for(i in startPos:nrow(all.rates)) {
+    if( is.na(red[i]) ) {
+      #if(i%%100000==0) { print(i) }
+      red[i] <- red[i-1]
+    }
+  }
+  return(c(rep(NA,startPos-1),red))
+}
+
 build_training_set_images <- function(side="ask",backwardWindow,prefix,samplingIndx) {
   
   head <- samplingIdx[1]
@@ -550,9 +562,9 @@ build_training_set_images <- function(side="ask",backwardWindow,prefix,samplingI
   buf[,2] <- grab_last(green, head, backwardWindow)
   buf[,3] <- grab_last(blue, head, backwardWindow)
   
-  red.openPosition[samplingIdx[1]]   <- buf[backwardWindow,1]
-  green.openPosition[samplingIdx[1]] <- buf[backwardWindow,2]
-  blue.openPosition[samplingIdx[1]]  <- buf[backwardWindow,3]
+  #red.openPosition[samplingIdx[1]]   <- buf[backwardWindow,1]
+  #green.openPosition[samplingIdx[1]] <- buf[backwardWindow,2]
+  #blue.openPosition[samplingIdx[1]]  <- buf[backwardWindow,3]
   
   writeSinglePng(prefix, scale(buf), head, imageSize)
     
@@ -575,27 +587,80 @@ build_training_set_images <- function(side="ask",backwardWindow,prefix,samplingI
     if( length(red_chunk) > 0 ){
       rcl <- length(red_chunk)
       buf[,1] <- c(buf[-(1:rcl),1],red_chunk)
-      red.openPosition[head] <- red_chunk[rcl]
+      #red.openPosition[head] <- red_chunk[rcl]
     } 
     
     if( length(green_chunk) > 0 ){
       gcl <- length(green_chunk)
       buf[,2] <- c(buf[-(1:gcl),2],green_chunk)
-      green.openPosition[head] <- green_chunk[gcl]
+      #green.openPosition[head] <- green_chunk[gcl]
     } 
     
     if( length(blue_chunk) > 0 ){
       bcl <- length(blue_chunk)
       buf[,3] <- c(buf[-(1:bcl),3],blue_chunk)
-      blue.openPosition[head] <- blue_chunk[bcl]
+      #blue.openPosition[head] <- blue_chunk[bcl]
     }
     
     writeSinglePng(prefix,scale(buf),head,imageSize)
   }
   
-  return(list(red.openPosition,green.openPosition,blue.openPosition))
+  #return(list(red.openPosition,green.openPosition,blue.openPosition))
 
 }
+
+build_training_set_images.v2 <- function(side="ask",backwardWindow,prefix,samplingIndx) {
+  
+  red_col <- paste("EURUSD.",side,sep="")
+  green_col <- paste("EURJPY.",side,sep="")
+  blue_col <- paste("USDJPY.",side,sep="")
+  
+  red   <- all.rates[,red_col]
+  green <- all.rates[,green_col]
+  blue  <- all.rates[,blue_col]
+  
+  library(rPython)
+  python.load('goldendims.py')
+  python.exec(paste("mygd = GoldenRectangle(",backwardWindow,").dimensions()",.sep=''))
+  imageSize <- python.get("mygd")
+  
+  fileConn<-file(paste(prefix,"image_size",sep="/"))
+  writeLines(paste(imageSize[1],imageSize[2]), fileConn)
+  close(fileConn)  
+  
+  red.openPosition <- vector()
+  green.openPosition <- vector()
+  blue.openPosition <- vector()
+  
+  buf <- matrix(ncol=3, nrow=backwardWindow)
+  #buf[,1] <- grab_last(red, head, backwardWindow)
+  #buf[,2] <- grab_last(green, head, backwardWindow)
+  #buf[,3] <- grab_last(blue, head, backwardWindow)
+  
+  #red.openPosition[samplingIdx[1]]   <- buf[backwardWindow,1]
+  #green.openPosition[samplingIdx[1]] <- buf[backwardWindow,2]
+  #blue.openPosition[samplingIdx[1]]  <- buf[backwardWindow,3]
+  
+  #writeSinglePng(prefix, scale(buf), head, imageSize)
+  
+  #head <- samplingIdx[1]
+  #previous_head <- head
+  
+  for( head in samplingIdx ) {
+
+    print(paste("head=",head))
+    
+    buf[,1] <- red[(head-backwardWindow+1):head]      
+    buf[,2] <- green[(head-backwardWindow+1):head]
+    buf[,3] <- blue[(head-backwardWindow+1):head]
+    
+    writeSinglePng(prefix,scale(buf),head,imageSize)
+  }
+  
+  #return(list(red.openPosition,green.openPosition,blue.openPosition))
+  
+}
+
 
 writeSinglePng <- function(prefix,buf,head,imageSize) {
   

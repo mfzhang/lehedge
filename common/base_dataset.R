@@ -27,3 +27,26 @@ rm(EURUSD.USDJPY)
 rm(EURUSD.ticks)
 rm(EURJPY.ticks)
 rm(USDJPY.ticks)
+
+all.rates[,"EURUSD.ask"] <- fillna("EURUSD.ask")
+all.rates[,"EURJPY.ask"] <- fillna("EURJPY.ask")
+all.rates[,"USDJPY.ask"] <- fillna("USDJPY.ask")
+
+all.rates[,"EURUSD.bid"] <- fillna("EURUSD.bid")
+all.rates[,"EURJPY.bid"] <- fillna("EURJPY.bid")
+all.rates[,"USDJPY.bid"] <- fillna("USDJPY.bid")
+
+# size of entire dataset
+nData <- nrow(all.rates)
+all.rates.100k.head <- all.rates[1:100000,]
+all.rates.100k.tail <- all.rates[(nData-99999):nData,]
+
+cropStart <- max(head(which(!is.na(all.rates.100k.head$EURUSD.ask)),n=1),
+                 head(which(!is.na(all.rates.100k.head$EURJPY.ask)),n=1),
+                 head(which(!is.na(all.rates.100k.head$USDJPY.ask)),n=1) )
+
+all.rates <- all.rates[4:nData,]
+nData <- nrow(all.rates)
+all.rates.100k.head <- all.rates[1:100000,]
+all.rates.100k.tail <- all.rates[(nData-99999):nData,]
+

@@ -503,8 +503,26 @@ findMinRow <- function(all.rates, currency, backwardWindow) {
   return(i+backwardWindow-1) 
 }
 
+# for each currency we need to initialize the lookback buffer
+# so we need enough ticks to fill and this helps find 
+# the minimum end point we can use for all three currencies
+findMaxRow <- function(d, currency, forwardWindow) {
+  end <- nrow(d)
+  col <- paste(currency,".ask",sep="")
+  grab <- d[(end-forwardWindow-1):end,col]
+  grab <- grab[!is.na(grab)]
+  i <- 1
+  while( length(grab) < forwardWindow ) {
+    grab <- d[(end-forwardWindow-1-i):end,col]
+    grab <- grab[!is.na(grab)]
+    i <- i+1
+  }
+  return(i+forwardWindow-1) 
+}
 
-build_training_set_images <- function(side="ask",head,backwardWindow,prefix,baseSkip) {
+build_training_set_images <- function(side="ask",backwardWindow,prefix,samplingIndx) {
+  
+  head <- samplingIdx[1]
   
   red_col <- paste("EURUSD.",side,sep="")
   green_col <- paste("EURJPY.",side,sep="")
@@ -523,25 +541,28 @@ build_training_set_images <- function(side="ask",head,backwardWindow,prefix,base
   writeLines(paste(imageSize[1],imageSize[2]), fileConn)
   close(fileConn)  
   
-  buf <- matrix(ncol=3,nrow=backwardWindow)
-  buf[,1] <- grab_last(red,head,backwardWindow)
-  buf[,2] <- grab_last(green,head,backwardWindow)
-  buf[,3] <- grab_last(blue,head,backwardWindow)
-  writeSinglePng(prefix,scale(buf),head,imageSize)
-  
-  sampled <- vector(length=nrow(all.rates))
-  sampled[head] <- 1
-  
   red.openPosition <- vector()
   green.openPosition <- vector()
   blue.openPosition <- vector()
   
-  while( head < nrow(all.rates) ) {
+  buf <- matrix(ncol=3, nrow=backwardWindow)
+  buf[,1] <- grab_last(red, head, backwardWindow)
+  buf[,2] <- grab_last(green, head, backwardWindow)
+  buf[,3] <- grab_last(blue, head, backwardWindow)
+  
+  red.openPosition[samplingIdx[1]]   <- buf[backwardWindow,1]
+  green.openPosition[samplingIdx[1]] <- buf[backwardWindow,2]
+  blue.openPosition[samplingIdx[1]]  <- buf[backwardWindow,3]
+  
+  writeSinglePng(prefix, scale(buf), head, imageSize)
     
-    skip <- sample(1:baseSkip,1)
-    print(paste("head=",head,"skip=",skip))
-    head <- head + skip
-    sampled[head] <- 1
+  previous_head <- head
+  
+  for( head in samplingIdx[-1] ) {
+    
+    skip <- head-previous_head 
+    previous_head <- head
+    print(paste("head=",head,"skipped=",skip))
     
     red_chunk <- red[(head-skip+1):head]
     green_chunk <- green[(head-skip+1):head]
@@ -572,7 +593,7 @@ build_training_set_images <- function(side="ask",head,backwardWindow,prefix,base
     writeSinglePng(prefix,scale(buf),head,imageSize)
   }
   
-  return(list(sampled,red.openPosition,green.openPosition,blue.openPosition))
+  return(list(red.openPosition,green.openPosition,blue.openPosition))
 
 }
 

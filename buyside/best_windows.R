@@ -1,10 +1,10 @@
-maxEURUSD <- bestBuyForwardWindow(EURUSD.ticks,10000)
+maxEURUSD <- bestBuyForwardWindow(EURUSD.raw,10000)
 print(paste("EURUSD=",maxEURUSD))
 
-maxUSDJPY <- bestBuyForwardWindow(USDJPY.ticks,100)
+maxUSDJPY <- bestBuyForwardWindow(USDJPY.raw,100)
 print(paste("USDJPY=",maxUSDJPY))
 
-maxEURJPY <- bestBuyForwardWindow(EURJPY.ticks,100)
+maxEURJPY <- bestBuyForwardWindow(EURJPY.raw,100)
 print(paste("EURJPY=",maxEURJPY))
 
 maxBestBuyForwardWindow <- max( maxEURUSD,

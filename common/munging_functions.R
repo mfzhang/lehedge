@@ -243,6 +243,56 @@ build_training_set <- function(side="ask",currency.ext,referenceTimes,nSamples,b
   return(currency.training)  
 }
 
+
+build_training_set_disk <- function(side="ask",currency.ext.str,referenceTimes,nSamples,backwardWindow) {
+  
+  # identify reference times in the target dataset
+  if(side=="ask"){
+    currency.ext <- get(paste(currency.ext.str,".buy.ext",sep=""))
+  }else if(side=="bid") {
+    currency.ext <- get(paste(currency.ext.str,".sell.ext",sep=""))
+  }
+  currency.refTimesRows <- as.numeric(row.names(currency.ext[!is.na(currency.ext$training),]))
+  
+  currency.refTimesRowsEnd <- currency.refTimesRows + backwardWindow - 1
+  
+  # to avoid transpose when scaling
+  currency.firstQuote <- matrix(nrow=2,ncol=nSamples)
+  currency.training <- matrix(nrow=1000,ncol=backwardWindow)
+  
+  for( i in 1:length(currency.refTimesRows)) { 
+    
+    startingRow <- currency.refTimesRows[i]
+    print(startingRow)
+    endRow <- currency.refTimesRowsEnd[i]
+    rates <- currency.ext[startingRow:endRow,side]
+    rates.nona <- rates[!is.na(rates)]
+    j <- 1
+    while( length(rates.nona) < backwardWindow & ((endRow+j)<nrow(currency.ext))){
+      rates <- c(rates.nona, currency.ext[endRow+j,side])
+      rates.nona <- rates[!is.na(rates)]
+      j <- j+1
+    }
+    
+    # TODO write rec to disk, write last quote of frame to in-mem matrix
+    currency.firstQuote[1,i] <- currency.ext[endRow+j-1,"bid"]
+    currency.firstQuote[2,i] <- currency.ext[endRow+j-1,"ask"]
+    # scale between 0 and 1 like this : 
+    # X_std = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0))
+    # X_scaled = X_std / (max - min) + min
+    X_std <- (rates.nona - min(rates.nona)) / (max(rates.nona)-min(rates.nona))
+    #print(length(X_std))
+    #X_scaled <- X_std / (max(rates.nona)-min(rates.nona)) + min(rates.nona)
+    currency.training[(i-1)%%1000+1,] <- X_std
+    
+    if( i%%1000 == 0 ) {
+      write.table(currency.training,file=paste(currency.ext.str,".ask.training",sep=""),append=TRUE)
+    }
+
+  }
+  return(currency.firstQuote)  
+}
+
 merge_ref_times <- function(currency.raw,referenceTimes){
   
   # this magically interleaves the target currency timestamps
@@ -296,7 +346,7 @@ build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
   # to avoid transpose when scaling
   currency.lastQuote <- matrix(nrow=2,ncol=nSamples)
   
-  i <- 1
+  #i <- 1
   for( i in 1:length(currency.refTimesRows)){ 
     startingRow <- currency.refTimesRows[i]
     print(startingRow)
@@ -311,11 +361,107 @@ build_last_quote <- function(currency.ext,backwardWindow,forwardWindow) {
     }
     currency.lastQuote[1,i] <- currency.ext[endRow+j-1,"bid"]
     currency.lastQuote[2,i] <- currency.ext[endRow+j-1,"ask"]    
-    i <- i+1
+    #i <- i+1
   }
   return(currency.lastQuote)  
 }
 
+# v2
+closeRates <- function(currency,forwardWindow,sampledf) {
+  
+  ask_col <- paste(currency,".ask",sep="")
+  bid_col <- paste(currency,".bid",sep="")
+  
+  a <- all.rates[,ask_col]
+  b <- all.rates[,bid_col]
+  
+  openPosition <- as.numeric(row.names(sampledf[sampledf$s == 1,,drop=FALSE]))
+  closePosition <- openPosition + forwardWindow - 1
+  
+  print(closePosition)
+  
+  # to avoid transpose when scaling
+  # [1,] -> open.ask
+  # [2,] -> open.bid
+  # [3,] -> close.ask
+  # [4,] -> close.bid
+  
+  closeRates <- matrix(nrow=2,ncol=nrow(sampledf))
+  
+  for( i in 1:length(openPosition)) { 
+    
+    startingRow <- openPosition[i]
+    print(startingRow)
+    endRow <- closePosition[i]
+    asks <- a[startingRow:endRow]
+    asks.nona <- asks[!is.na(asks)]
+    
+    j <- 1
+    while( length(asks.nona) < (forwardWindow) & ((endRow+j)<nrow(all.rates))){
+      if(!is.na(a[endRow+j])) {
+        asks.nona <- c(asks.nona, a[endRow+j])        
+      } 
+      j <- j+1
+    }
+    
+    closeRates[1,i] <- b[endRow+j-1]
+    closeRates[2,i] <- a[endRow+j-1]    
+  }
+  return(closeRates)  
+}
+
+# v3
+ask.closeRates <- function(currency,forwardWindow,sampledf) {
+  
+  ask_col <- paste(currency,".ask",sep="")
+#  bid_col <- paste(currency,".bid",sep="")
+  
+  a <- all.rates[,ask_col]
+ # b <- all.rates[,bid_col]
+  
+  openPosition <- as.numeric(row.names(sampledf[sampledf$s == 1,,drop=FALSE]))
+  closePosition <- openPosition + forwardWindow - 1
+  
+  #print(closePosition)
+  
+  # to avoid transpose when scaling
+  # [1,] -> open.ask
+  # [2,] -> open.bid
+  # [3,] -> close.ask
+  # [4,] -> close.bid
+  
+  closeRates <- matrix(nrow=2,ncol=nrow(sampledf))
+
+  a.clean <- !is.na(a[openPosition[1]:length(a)])
+  a.nona <- data.frame(ask=a[a.clean])
+  row.names(a.nona) <- openPosition
+  print(a.nona)
+  
+  for( i in 1:length(openPosition)) { 
+    
+    startingRow <- openPosition[i]
+    print(startingRow)
+    endRow <- closePosition[i]
+    asks <- a[startingRow:endRow]
+    asks.nona <- asks[!is.na(asks)]
+    
+    j <- 1
+    while( length(asks.nona) < (forwardWindow) & ((endRow+j)<nrow(all.rates))){
+      if(!is.na(a[endRow+j])) {
+        asks.nona <- c(asks.nona, a[endRow+j])        
+      } 
+      j <- j+1
+    }
+    
+    closeRates[1,i] <- b[endRow+j-1]
+    closeRates[2,i] <- a[endRow+j-1]    
+  }
+  return(closeRates)  
+}
+
+
+
+# deprecated in favor writeSinglePng
 write_pngs <- function(prefix,ids,red,green,blue) {
   library(stringr)  
   library(png)
@@ -341,6 +487,108 @@ write_pngs <- function(prefix,ids,red,green,blue) {
   }
 }
 
+# for each currency we need to initialize the lookback buffer
+# so we need enough ticks to fill and this helps find 
+# the minimum end point we can use for all three currencies
+findMinRow <- function(all.rates, currency, backwardWindow) {
+  col <- paste(currency,".ask",sep="")
+  grab <- all.rates[1:backwardWindow,col]
+  grab <- grab[!is.na(grab)]
+  i <- 1
+  while( length(grab) < backwardWindow ) {
+    grab <- all.rates[1:(backwardWindow+i),col]
+    grab <- grab[!is.na(grab)]
+    i <- i+1
+  }
+  return(i+backwardWindow-1) 
+}
 
 
+build_training_set_images <- function(side="ask",head,backwardWindow,prefix,baseSkip) {
+  
+  red_col <- paste("EURUSD.",side,sep="")
+  green_col <- paste("EURJPY.",side,sep="")
+  blue_col <- paste("USDJPY.",side,sep="")
+  
+  red   <- all.rates[,red_col]
+  green <- all.rates[,green_col]
+  blue  <- all.rates[,blue_col]
+  
+  library(rPython)
+  python.load('goldendims.py')
+  python.exec(paste("mygd = GoldenRectangle(",backwardWindow,").dimensions()",.sep=''))
+  imageSize <- python.get("mygd")
+  
+  fileConn<-file(paste(prefix,"image_size",sep="/"))
+  writeLines(paste(imageSize[1],imageSize[2]), fileConn)
+  close(fileConn)  
+  
+  buf <- matrix(ncol=3,nrow=backwardWindow)
+  buf[,1] <- grab_last(red,head,backwardWindow)
+  buf[,2] <- grab_last(green,head,backwardWindow)
+  buf[,3] <- grab_last(blue,head,backwardWindow)
+  writeSinglePng(prefix,scale(buf),head,imageSize)
+  
+  sampled <- vector(length=nrow(all.rates))
+  sampled[head] <- 1
+  
+  red.openPosition <- vector()
+  green.openPosition <- vector()
+  blue.openPosition <- vector()
+  
+  while( head < nrow(all.rates) ) {
+    
+    skip <- sample(1:baseSkip,1)
+    print(paste("head=",head,"skip=",skip))
+    head <- head + skip
+    sampled[head] <- 1
+    
+    red_chunk <- red[(head-skip+1):head]
+    green_chunk <- green[(head-skip+1):head]
+    blue_chunk <- blue[(head-skip+1):head]
+    
+    red_chunk <- red_chunk[!is.na(red_chunk)]
+    green_chunk <- green_chunk[!is.na(green_chunk)]
+    blue_chunk <- blue_chunk[!is.na(blue_chunk)]
+    
+    if( length(red_chunk) > 0 ){
+      rcl <- length(red_chunk)
+      buf[,1] <- c(buf[-(1:rcl),1],red_chunk)
+      red.openPosition[head] <- red_chunk[rcl]
+    } 
+    
+    if( length(green_chunk) > 0 ){
+      gcl <- length(green_chunk)
+      buf[,2] <- c(buf[-(1:gcl),2],green_chunk)
+      green.openPosition[head] <- green_chunk[gcl]
+    } 
+    
+    if( length(blue_chunk) > 0 ){
+      bcl <- length(blue_chunk)
+      buf[,3] <- c(buf[-(1:bcl),3],blue_chunk)
+      blue.openPosition[head] <- blue_chunk[bcl]
+    }
+    
+    writeSinglePng(prefix,scale(buf),head,imageSize)
+  }
+  
+  return(list(sampled,red.openPosition,green.openPosition,blue.openPosition))
+
+}
+
+writeSinglePng <- function(prefix,buf,head,imageSize) {
+  
+  img      <- array(data=NA,dim=c(imageSize[1],imageSize[2],3))
+  
+  for( i in 1:3) {
+    buf[,i] <- (buf[,i] - min(buf[,i])) / (max(buf[,i])-min(buf[,i]))
+    img[,,i] <- matrix(buf[,i],ncol=imageSize[2],byrow=TRUE)
+  }
+  
+  library(stringr)  
+  library(png)
+  
+  writePNG(image=img,target=paste(prefix,str_pad(head,13,pad='0'),'.png',sep=''))
+  
+}
 

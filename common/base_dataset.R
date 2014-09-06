@@ -16,9 +16,14 @@ EURUSD.raw <- EURUSD.ticks[EURUSD.ticks$epoch >= minEpoch & EURUSD.ticks$epoch <
 EURJPY.raw <- EURJPY.ticks[EURJPY.ticks$epoch >= minEpoch & EURJPY.ticks$epoch < maxEpoch,]
 USDJPY.raw <- USDJPY.ticks[USDJPY.ticks$epoch >= minEpoch & USDJPY.ticks$epoch < maxEpoch,]
 
-# use one of the datasets to sample reference times
-currencyData <- EURUSD.raw
+EURUSD.USDJPY <- merge(EURUSD.raw,USDJPY.raw,by.x="epoch",by.y="epoch",all.x=TRUE,all.y=TRUE )
+EURUSD.USDJPY.EURJPY <- merge(EURUSD.USDJPY,EURJPY.raw,by.x="epoch",by.y="epoch",all.x=TRUE,all.y=TRUE )
+names(EURUSD.USDJPY.EURJPY) <- c("epoch","EURUSD.ask","EURUSD.bid","EURUSD.spread","EURUSD.ask.vol","EURUSD.bid.vol","USDJPY.ask","USDJPY.bid","USDJPY.spread","USDJPY.ask.vol","USDJPY.bid.vol","EURJPY.ask","EURJPY.bid","EURJPY.spread","EURJPY.ask.vol","EURJPY.bid.vol")
+all.rates <- EURUSD.USDJPY.EURJPY[,c("epoch","EURUSD.ask","EURUSD.bid","USDJPY.ask","USDJPY.bid","EURJPY.ask","EURJPY.bid")]
 
-nSamples <- 3600*24
-nRecords <- min(nrow(EURJPY.raw),nrow(EURUSD.raw),nrow(USDJPY.raw))
-
+# clean up to avoid huge workspace data files
+rm(EURUSD.USDJPY.EURJPY)
+rm(EURUSD.USDJPY)
+rm(EURUSD.ticks)
+rm(EURJPY.ticks)
+rm(USDJPY.ticks)

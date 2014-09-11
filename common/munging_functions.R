@@ -166,26 +166,26 @@ load_from_binary_light <- function(pair,currency.precision) {
 }
 
 
-bestBuyForwardWindow <- function(currencyData, currency.precision) {
+bestBuyForwardWindow <- function(currency, currency.precision) {
   
   nSamples <- 3600*24
-  nRecords <- nrow(currencyData)
-  maxForwardWindow <- 5000
-  maxBackwardWindow <- 5000
+  nRecords <- nrow(all.rates)
+  maxForwardWindow <- 10000
+  maxBackwardWindow <- 20000
   trainingRows <- sample((maxBackwardWindow+1):(nRecords-maxForwardWindow-1),nSamples)
   
+  cols <- c(paste(currency,".ask",sep=""), paste(currency,".bid",sep=""))
   q95 <- NULL
   
   for( forwardWindow in seq(100,maxForwardWindow,100) ) {
-    currency.s <- currencyData[trainingRows,]
-    currency.f <- currencyData[trainingRows + forwardWindow,]
-    buyProfit <- (currency.f$bid - currency.s$ask)*currency.precision
+    currency.s <- all.rates[trainingRows, cols]
+    currency.f <- all.rates[trainingRows + forwardWindow, cols]
+    buyProfit <- (currency.f[,paste(currency,".bid",sep="")] - currency.s[,paste(currency,".ask",sep="")])*currency.precision
     q95[forwardWindow] <- quantile(buyProfit,probs=c(95)/100)
     if(q95[forwardWindow] >= 10) {
       break
     }
-  }
-  
+  }  
   return(forwardWindow)
 }
 

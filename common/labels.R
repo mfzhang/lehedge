@@ -2,6 +2,10 @@ library(stringr)
 
 all.profit <- all.rates
 
+all.profit[,"EURUSD.median"] <- (all.profit[,"EURUSD.ask"] + all.profit[,"EURUSD.bid"])/2
+all.profit[,"EURJPY.median"] <- (all.profit[,"EURJPY.ask"] + all.profit[,"EURJPY.bid"])/2
+all.profit[,"USDJPY.median"] <- (all.profit[,"USDJPY.ask"] + all.profit[,"USDJPY.bid"])/2
+
 all.profit[ all.profit$EURUSD.profit < u  &
             all.profit$EURJPY.profit < u  &
             all.profit$USDJPY.profit < u,   "label" ] <- 0 
@@ -87,24 +91,6 @@ all.profit[ all.profit$EURUSD.profit >= u  &
               all.profit$USDJPY.profit >= u &
               all.profit$USDJPY.decision == -1,   "label" ] <- 17
 
-label.counts <- table(all.profit$label)
-
-profit.sum    <- vector()
-profit.sum[1] <- sum(subset(all.profit,label==1,select=EURUSD.profit))
-profit.sum[2] <- sum(subset(all.profit,label==2,select=EURJPY.profit))
-profit.sum[3] <- sum(subset(all.profit,label==3,select=USDJPY.profit))
-profit.sum[4] <- sum(subset(all.profit,label==4,select=c("EURUSD.profit","EURJPY.profit")))
-profit.sum[6] <- sum(subset(all.profit,label==6,select=c("EURJPY.profit","USDJPY.profit")))
-profit.sum[7] <- sum(subset(all.profit,label==7,select=c("EURUSD.profit","EURJPY.profit","USDJPY.profit")))
-
-profit.sum[c(1,2,3,4,6,7)]/label.counts[2:7]
-
-#1        2        3        4        6        7 
-#13.74093 14.70803 12.93258 39.62058 36.35264 75.73316
-
-print(buy.profit.sum)
-
-sum(buy.profit.counts[2:7])
 
 # build stratified training set
 all.profit.0 <- subset(all.profit,label == 0 | label == 15)
@@ -214,35 +200,4 @@ write.table(x=validation.sample[,c("filename","label")],
 
 # flag samples in master dataset
 all.profit[row.names(full.sample),"sample"] <- 1
-
-totalProfit <- sum(
-  sum(buy.profit[  buy.profit$eurusd >= u  &
-                     buy.profit$eurjpy < u  &
-                     buy.profit$usdjpy < u,   "eurusd" ])
-  ,
-  sum(buy.profit[  buy.profit$eurusd < u  &
-                     buy.profit$eurjpy >= u  &
-                     buy.profit$usdjpy < u,   "eurjpy" ])
-  ,
-  sum(buy.profit[  buy.profit$eurusd < u  &
-                     buy.profit$eurjpy < u  &
-                     buy.profit$usdjpy >= u,   "usdjpy" ])
-  ,
-  sum(buy.profit[  buy.profit$eurusd >= u  &
-                     buy.profit$eurjpy >= u  &
-                     buy.profit$usdjpy < u,   c("eurusd","eurjpy") ])
-  ,
-  sum(buy.profit[  buy.profit$eurusd >= u  &
-                     buy.profit$eurjpy < u  &
-                     buy.profit$usdjpy >= u,  c("eurusd","usdjpy") ])
-  ,
-  sum(buy.profit[  buy.profit$eurusd < u  &
-                     buy.profit$eurjpy >= u  &
-                     buy.profit$usdjpy >= u,  c("eurjpy","usdjpy") ])
-  ,
-  sum(buy.profit[  buy.profit$eurusd >= u  &
-                     buy.profit$eurjpy >= u  &
-                     buy.profit$usdjpy >= u,   c("eurusd","eurjpy","usdjpy") ]))
-
-
 

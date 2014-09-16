@@ -661,6 +661,80 @@ build_training_set_images.v2 <- function(side="ask",backwardWindow,prefix,sampli
   
 }
 
+build_training_set_images.v3 <- function(side="ask",backwardWindow,prefix,idx) {
+  
+  red_col <- paste("EURUSD.",side,sep="")
+  green_col <- paste("EURJPY.",side,sep="")
+  blue_col <- paste("USDJPY.",side,sep="")
+  
+  red   <- all.profit[,red_col]
+  green <- all.profit[,green_col]
+  blue  <- all.profit[,blue_col]
+  
+  library(rPython)
+  python.load('goldendims.py')
+  python.exec(paste("mygd = GoldenRectangle(",backwardWindow,").dimensions()",.sep=''))
+  imageSize <- python.get("mygd")
+  
+  fileConn<-file(paste(prefix,"image_size",sep="/"))
+  writeLines(paste(imageSize[1],imageSize[2]), fileConn)
+  close(fileConn)  
+  
+  red.openPosition <- vector()
+  green.openPosition <- vector()
+  blue.openPosition <- vector()
+  
+  buf <- matrix(ncol=3, nrow=backwardWindow)
+  
+  for( head in idx ) {
+    
+    print(paste("head=",head))
+    
+    buf[,1] <- red[(head-backwardWindow+1):head]      
+    buf[,2] <- green[(head-backwardWindow+1):head]
+    buf[,3] <- blue[(head-backwardWindow+1):head]
+    
+    writeSinglePng(prefix,scale(buf),head,imageSize)
+  }
+  
+}
+
+spit_sample_images <- function(backwardWindow,prefix,idx) {
+  
+  red   <- all.profit[,"EURUSD.median"]
+  green <- all.profit[,"EURJPY.median"]
+  blue  <- all.profit[,"USDJPY.median"]
+  filenames  <- paste(prefix,str_pad(row.names(all.profit[idx,]),8,pad='0'),".png",sep="")
+  
+  library(rPython)
+  python.load('goldendims.py')
+  python.exec(paste("mygd = GoldenRectangle(",backwardWindow,").dimensions()",.sep=''))
+  imageSize <- python.get("mygd")
+  
+  fileConn<-file(paste(prefix,"image_size",sep="/"))
+  writeLines(paste(imageSize[1],imageSize[2]), fileConn)
+  close(fileConn)  
+    
+  buf <- matrix(ncol=3, nrow=backwardWindow)
+  img <- array(data=NA,dim=c(imageSize[1],imageSize[2],3))
+  
+  i <- 1
+  for( head in idx ) {
+    range <- (head-backwardWindow+1):head
+    buf[,1] <- red[range]
+    buf[,2] <- green[range]
+    buf[,3] <- blue[range]
+    buf <- scale(buf)
+    for( j in 1:3) {
+      #buf[,j] <- (buf[,j] - min(buf[,j])) / (max(buf[,j])-min(buf[,j]))
+      mtx <- (buf[,j] - min(buf[,j])) / (max(buf[,j])-min(buf[,j]))
+      img[,,j] <- matrix(mtx,ncol=imageSize[2],byrow=TRUE)
+    }
+    writePNG(image=img,target=filenames[i])
+    i <- i+1
+  } 
+}
+
 
 writeSinglePng <- function(prefix,buf,head,imageSize) {
   
@@ -670,11 +744,8 @@ writeSinglePng <- function(prefix,buf,head,imageSize) {
     buf[,i] <- (buf[,i] - min(buf[,i])) / (max(buf[,i])-min(buf[,i]))
     img[,,i] <- matrix(buf[,i],ncol=imageSize[2],byrow=TRUE)
   }
-  
-  library(stringr)  
-  library(png)
-  
-  writePNG(image=img,target=paste(prefix,str_pad(head,13,pad='0'),'.png',sep=''))
+    
+  writePNG(image=img,target=paste(prefix,str_pad(head,8,pad='0'),'.png',sep=''))
   
 }
 

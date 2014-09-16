@@ -111,5 +111,7 @@ all.rates[,"EURUSD.decision"] <- ifelse(all.rates[,"EURUSD.buy.profit"] > all.ra
 all.rates[,"EURJPY.decision"] <- ifelse(all.rates[,"EURJPY.buy.profit"] > all.rates[,"EURJPY.sell.profit"],1,-1)
 all.rates[,"USDJPY.decision"] <- ifelse(all.rates[,"USDJPY.buy.profit"] > all.rates[,"USDJPY.sell.profit"],1,-1)
 
-#all.profit$EURUSD.label <- ifelse(all.profit$EURUSD.decision == 1,ifelse(all.profit$EURUSD.profit>u,1,0){},-1)
+
+
+
 

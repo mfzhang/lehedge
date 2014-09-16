@@ -172,15 +172,50 @@ full.sample <- rbind(all.profit.0.sample,
                      all.profit.16.sample,
                      all.profit.17.sample)
 
-nSample <- nrow(full.sample)
+# flag samples in master dataset
+all.profit[row.names(full.sample),"sample"] <- 1
+
+# what we learn from
+backwardWindow <- 2*maxBestBuyForwardWindow
+forwardWindow  <- maxBestBuyForwardWindow
+
+# this gives us the first row of the dataset for which 
+# we know we have enough ticks for all 3 currencies to fill the backward window
+# it is where we should initialize the head of the tick reader
+
+nData <- nrow(all.profit)
+minRow <- backwardWindow
+maxRow <- nData-forwardWindow+1 
+
+print(paste("head initialization row = ",minRow,sep=""))
+
+# let the image generation happen!!
+# this will generate 960K images, about 10GB when backward window is 10600 pixels
+
+samplingIdx <- sort(which(all.profit[,"sample"]==1))
+#croppedIdx <- sort(samplingIdx[samplingIdx >= minRow & samplingIdx <= maxRow])
+cropEnds <- sort(samplingIdx[samplingIdx < minRow | samplingIdx > maxRow])
+
+# reset to NA in cropStart and cropEnd zones
+all.profit[cropEnds,"sample"] <- NA
+
+# readjust
+samplingIdx <- sort(which(all.profit[,"sample"]==1))
+#croppedIdx <- sort(samplingIdx[samplingIdx >= minRow & samplingIdx <= maxRow])
+
+almost.full.sample <- subset(all.profit,sample==1)
+
+nSample <- nrow(almost.full.sample)
 # create permutation of indices
 shuffler <- sample(1:nSample,size=nSample)
 # shuffle labels
-full.sample.shuffled <- full.sample[shuffler,] 
+almost.full.sample.shuffled <- almost.full.sample[shuffler,] 
+# Corrective action : almost.full.sample.shuffled <- almost.full.sample[shuffler>=minRow & shuffler <=maxRow,] 
 
 validation.idx <- sort(sample(1:nSample,size=0.1*nSample))
-validation.sample <- full.sample.shuffled[validation.idx,]
-training.sample <- full.sample.shuffled[-validation.idx,]
+# Corrective action : validation.idx <- validation.idx[validation.idx>=minRow & validation.idx<=maxRow]
+validation.sample <- almost.full.sample.shuffled[validation.idx,]
+training.sample <- almost.full.sample.shuffled[-validation.idx,]
 
 training.sample[,"filename"] <- paste(str_pad(row.names(training.sample), 8, pad="0"),".png",sep="")
 validation.sample[,"filename"] <- paste(str_pad(row.names(validation.sample), 8, pad="0"),".png",sep="")
@@ -189,15 +224,17 @@ write.table(x=training.sample[,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="buyside/lehedge_buy_training.txt")
+            file="lehedge_training.txt")
 
 write.table(x=validation.sample[,c("filename","label")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="buyside/lehedge_buy_val.txt")
+            file="lehedge_validation.txt")
 
+# let the image generation happen!!
+# this will generate 960K images, about 10GB when backward window is 10600 pixels
 
-# flag samples in master dataset
-all.profit[row.names(full.sample),"sample"] <- 1
+library(png)
 
+spit_sample_images(backwardWindow,"img/", samplingIdx)

@@ -199,12 +199,14 @@ cropEnds <- sort(samplingIdx[samplingIdx < minRow | samplingIdx > maxRow])
 # reset to NA in cropStart and cropEnd zones
 all.profit[cropEnds,"sample"] <- NA
 
-# readjust
+# readjust to later pass to spit_image
 samplingIdx <- sort(which(all.profit[,"sample"]==1))
 #croppedIdx <- sort(samplingIdx[samplingIdx >= minRow & samplingIdx <= maxRow])
 
+# get the full sample cleaned from starting and ending short-sighted portions
 almost.full.sample <- subset(all.profit,sample==1)
 
+# shuffle samples
 nSample <- nrow(almost.full.sample)
 # create permutation of indices
 shuffler <- sample(1:nSample,size=nSample)

@@ -1,0 +1,114 @@
+name: "LeHedge"
+layers {
+  name: "mydata"
+  type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "lehedge_train_leveldb"
+    batch_size: 64
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "mydata"
+  type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "lehedge_val_leveldb"
+    batch_size: 64
+  }
+  include: { phase: TEST }
+}
+
+layers {
+  name: "conv1"
+  type: CONVOLUTION
+  bottom: "data"
+  top: "conv1"
+  convolution_param {
+    num_output: 104 
+    kernel_h: 51
+    kernel_w: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layers {
+  name: "pool1"
+  type: POOLING
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_h: 19
+    kernel_w: 27
+    stride: 1
+  }
+}
+layers {
+  name: "conv2"
+  type: CONVOLUTION
+  bottom: "pool1"
+  top: "conv2"
+  convolution_param {
+    num_output: 104
+    kernel_h: 3
+    kernel_w: 65
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layers {
+  name: "pool2"
+  type: POOLING
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_h: 18
+    kernel_w: 6
+    stride: 1
+  }
+}
+layers {
+  name: "ip1"
+  type: INNER_PRODUCT
+  bottom: "pool2"
+  top: "ip1"
+  inner_product_param {
+    num_output: 19
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "ip1"
+  bottom: "label"
+  top: "accuracy"
+  include: { phase: TEST }
+}
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "ip1"
+  bottom: "label"
+  top: "loss"
+}

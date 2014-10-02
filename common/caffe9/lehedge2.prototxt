@@ -1,36 +1,19 @@
 name: "LeHedge"
-layers {
-  name: "mydata"
-  type: DATA
-  top: "data"
-  top: "label"
-  data_param {
-    source: "lehedge_train_leveldb"
-    batch_size: 64
-  }
-  include: { phase: TRAIN }
-}
-layers {
-  name: "mydata"
-  type: DATA
-  top: "data"
-  top: "label"
-  data_param {
-    source: "lehedge_val_leveldb"
-    batch_size: 64
-  }
-  include: { phase: TEST }
-}
-
+input: "data"
+input_dim : 120
+input_dim: 3
+input_dim: 75
+input_dim: 40
 layers {
   name: "conv1"
   type: CONVOLUTION
   bottom: "data"
   top: "conv1"
+  blobs_lr: 1
+  blobs_lr: 2
   convolution_param {
-    num_output: 18 
-    kernel_h: 51
-    kernel_w: 5
+    num_output: 100 
+    kernel_size: 8
     stride: 1
     weight_filler {
       type: "xavier"
@@ -47,9 +30,8 @@ layers {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_h: 19
-    kernel_w: 27
-    stride: 1
+    kernel_size: 5
+    stride: 2
   }
 }
 layers {
@@ -57,10 +39,11 @@ layers {
   type: CONVOLUTION
   bottom: "pool1"
   top: "conv2"
+  blobs_lr: 1
+  blobs_lr: 2
   convolution_param {
-    num_output: 36
-    kernel_h: 3
-    kernel_w: 65
+    num_output: 250
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "xavier"
@@ -77,9 +60,8 @@ layers {
   top: "pool2"
   pooling_param {
     pool: MAX
-    kernel_h: 18
-    kernel_w: 6
-    stride: 1
+    kernel_size: 2
+    stride: 2
   }
 }
 layers {
@@ -87,8 +69,33 @@ layers {
   type: INNER_PRODUCT
   bottom: "pool2"
   top: "ip1"
+  blobs_lr: 1
+  blobs_lr: 2
   inner_product_param {
-    num_output: 19
+    num_output: 500
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layers {
+  name: "relu1"
+  type: RELU
+  bottom: "ip1"
+  top: "ip1"
+}
+layers {
+  name: "ip2"
+  type: INNER_PRODUCT
+  bottom: "ip1"
+  top: "ip2"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
+    num_output: 8
     weight_filler {
       type: "xavier"
     }
@@ -100,15 +107,15 @@ layers {
 layers {
   name: "accuracy"
   type: ACCURACY
-  bottom: "ip1"
+  bottom: "ip2"
   bottom: "label"
   top: "accuracy"
   include: { phase: TEST }
 }
 layers {
   name: "loss"
-  type: SOFTMAX_LOSS
-  bottom: "ip1"
+  type: SOFTMAX
+  bottom: "ip2"
   bottom: "label"
   top: "loss"
 }

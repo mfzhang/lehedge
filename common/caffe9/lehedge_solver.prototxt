@@ -1,0 +1,14 @@
+net: "lehedge_train_test.prototxt.2"
+test_iter: 563
+test_interval: 1000
+base_lr: 0.00001
+momentum: 0.9
+weight_decay: 0.00001
+lr_policy: "fixed"
+gamma: 0.1
+power: 0.75
+display: 5
+max_iter: 500000
+snapshot: 282
+snapshot_prefix: "snp"
+solver_mode: CPU

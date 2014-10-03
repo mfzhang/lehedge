@@ -2,5 +2,5 @@
 
 TOOLS=~/Repositories/caffedev/build/tools
 
-$TOOLS/caffe train --solver=lehedge_solver.prototxt
+$TOOLS/caffe train --solver=solver.prototxt
 

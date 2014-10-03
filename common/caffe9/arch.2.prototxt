@@ -28,8 +28,8 @@ layers {
   bottom: "data"
   top: "conv1"
   convolution_param {
-    num_output: 32 
-    kernel_size: 11
+    num_output: 64 
+    kernel_size: 5 
     stride: 1
     weight_filler {
       type: "xavier"
@@ -46,8 +46,8 @@ layers {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 7
-    stride: 1
+    kernel_size: 5
+    stride: 2
   }
 }
 layers {
@@ -56,9 +56,9 @@ layers {
   bottom: "pool1"
   top: "conv2"
   convolution_param {
-    num_output: 64
-    kernel_size: 3
-    stride: 1
+    num_output: 128
+    kernel_size: 5
+    stride: 2
     weight_filler {
       type: "xavier"
     }
@@ -75,7 +75,7 @@ layers {
   pooling_param {
     pool: MAX
     kernel_size: 5
-    stride: 1
+    stride: 2
   }
 }
 layers {
@@ -84,7 +84,7 @@ layers {
   bottom: "pool2"
   top: "ip1"
   inner_product_param {
-    num_output: 128
+    num_output: 256
     weight_filler {
       type: "xavier"
     }

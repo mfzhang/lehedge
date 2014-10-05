@@ -35,17 +35,19 @@ fi
 echo "Creating train leveldb..."
 
 GLOG_logtostderr=1 $CAFFETOOLS/convert_imageset.bin \
+    -backend leveldb \
     $TRAIN_DATA_ROOT \
     ./labels_training.txt \
-    lehedge_train_leveldb 1 leveldb
+    lehedge_train_leveldb
 #    $RESIZE_HEIGHT $RESIZE_WIDTH
 
 echo "Creating val leveldb..."
 
 GLOG_logtostderr=1 $CAFFETOOLS/convert_imageset.bin \
+    -backend leveldb \
     $VAL_DATA_ROOT \
      ./labels_validation.txt \
-    lehedge_val_leveldb 1 leveldb
+    lehedge_val_leveldb
 #    $RESIZE_HEIGHT $RESIZE_WIDTH
 
 echo "Done."

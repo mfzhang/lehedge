@@ -2,10 +2,10 @@
 # Create the imagenet leveldb inputs
 # N.B. set the path to the imagenet train + val data dirs
 
-TOOLS=~/Repositories/caffe/build/tools
+#TOOLS=~/Repositories/caffe/build/tools
 
-TRAIN_DATA_ROOT=../../img/
-VAL_DATA_ROOT=../../img/
+TRAIN_DATA_ROOT=./img/
+VAL_DATA_ROOT=./img/
 
 # Set RESIZE=true to resize the images to 256x256. Leave as false if images have
 # already been resized using another tool.
@@ -34,17 +34,17 @@ fi
 
 echo "Creating train leveldb..."
 
-GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
+GLOG_logtostderr=1 $CAFFETOOLS/convert_imageset.bin \
     $TRAIN_DATA_ROOT \
-    ../../lehedge_training.v5.txt \
+    ./labels_training.txt \
     lehedge_train_leveldb 1 leveldb
 #    $RESIZE_HEIGHT $RESIZE_WIDTH
 
 echo "Creating val leveldb..."
 
-GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
+GLOG_logtostderr=1 $CAFFETOOLS/convert_imageset.bin \
     $VAL_DATA_ROOT \
-     ../../lehedge_validation.v5.txt \
+     ./labels_validation.txt \
     lehedge_val_leveldb 1 leveldb
 #    $RESIZE_HEIGHT $RESIZE_WIDTH
 

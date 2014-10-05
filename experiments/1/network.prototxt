@@ -5,8 +5,8 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "lehedge_train_leveldb"
-    batch_size: 64
+    source: "../../data/1/lehedge_train_leveldb"
+    batch_size: 32
   }
   include: { phase: TRAIN }
 }
@@ -16,8 +16,8 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "lehedge_val_leveldb"
-    batch_size: 64
+    source: "../../data/1/lehedge_val_leveldb"
+    batch_size: 32
   }
   include: { phase: TEST }
 }
@@ -28,13 +28,11 @@ layers {
   bottom: "data"
   top: "conv1"
   convolution_param {
-    num_output: 18 
-    kernel_h: 51
-    kernel_w: 5
+    num_output: 9
+    kernel_size: 13
     stride: 1
     weight_filler {
-      type: "gaussian"
-      std: 0.0001
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -48,9 +46,8 @@ layers {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_h: 19
-    kernel_w: 27
-    stride: 1
+    kernel_size: 3
+    stride: 2
   }
 }
 layers {
@@ -59,13 +56,11 @@ layers {
   bottom: "pool1"
   top: "conv2"
   convolution_param {
-    num_output: 36
-    kernel_h: 3
-    kernel_w: 65
-    stride: 1
+    num_output: 18
+    kernel_size: 3
+    stride: 2
     weight_filler {
-      type: "gaussian"
-      std: 0.0001
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -79,8 +74,7 @@ layers {
   top: "pool2"
   pooling_param {
     pool: MAX
-    kernel_h: 18
-    kernel_w: 6
+    kernel_size: 3
     stride: 1
   }
 }
@@ -90,7 +84,7 @@ layers {
   bottom: "pool2"
   top: "ip1"
   inner_product_param {
-    num_output: 72
+    num_output: 36
     weight_filler {
       type: "xavier"
     }
@@ -113,8 +107,7 @@ layers {
   inner_product_param {
     num_output: 18
     weight_filler {
-      type: "gaussian"
-      std: 0.0001
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -124,7 +117,7 @@ layers {
 layers {
   name: "accuracy"
   type: ACCURACY
-  bottom: "ip1"
+  bottom: "ip2"
   bottom: "label"
   top: "accuracy"
   include: { phase: TEST }
@@ -132,7 +125,9 @@ layers {
 layers {
   name: "loss"
   type: SOFTMAX_LOSS
-  bottom: "ip1"
+  bottom: "ip2"
   bottom: "label"
   top: "loss"
 }
+
+

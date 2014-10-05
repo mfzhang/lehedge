@@ -1,4 +1,4 @@
-net: "arch.prototxt"
+net: "network.prototxt"
 test_iter: 563
 test_interval: 1000
 base_lr: 0.000002
@@ -11,4 +11,4 @@ display: 5
 max_iter: 500000
 snapshot: 10000 
 snapshot_prefix: "snp"
-solver_mode: GPU
+solver_mode: CPU

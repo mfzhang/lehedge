@@ -1,0 +1,16 @@
+net: "network.prototxt"
+test_iter: 563
+test_interval: 1000
+base_lr: 0.000002
+momentum: 0.99
+weight_decay: 0.00001
+lr_policy: "step"
+gamma: 0.4
+power: 0.75
+display: 10
+stepsize: 100000
+max_iter: 500000
+snapshot: 10000 
+snapshot_prefix: "snp"
+solver_mode: GPU
+random_seed: 1123

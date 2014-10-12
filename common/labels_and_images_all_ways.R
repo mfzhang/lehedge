@@ -176,12 +176,14 @@ all.profit[ all.profit$EURUSD.profit >= u  &
 label.counts <- table(all.profit$label)
 print(label.counts)
 
+all.profit[,"recoded"] <- NA
+
 # build stratified training set
 all.profit.000 <- subset(all.profit,label %in% c("000","021","012","101","121","120","202","210","212","221"))
 nData.000      <- nrow(all.profit.000)
 s000           <- sort(sample(1:nData.000,size=10000))
 all.profit.000.sample <- all.profit.000[s000,]
-
+all.profit.000.sample[,"recoded"] <- 0
 all.profit[row.names(all.profit.000.sample),"recoded"] <- 0
 
 all.profit.001 <- subset(all.profit,label == "001")
@@ -377,17 +379,17 @@ write.table(x=training.sample[,c("filename","recoded")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="lehedge_training.v5.txt")
+            file="data/2/lehedge_training.txt")
 
 write.table(x=validation.sample[,c("filename","recoded")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="lehedge_validation.v5.txt")
+            file="data/2/lehedge_validation.txt")
 
 # let the image generation happen!!
 # this will generate 960K images, about 10GB when backward window is 10600 pixels
 
 library(png)
 
-spit_sample_images(backwardWindow,"img/", samplingIdx)
+spit_sample_images(backwardWindow,"data/2/img/", samplingIdx)

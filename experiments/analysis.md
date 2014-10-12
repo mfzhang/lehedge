@@ -16,11 +16,13 @@ Trying over and over again, the random weights used to initialize the network fi
 
 
 ```r
-d <- read.table('1/accuracy.txt',stringsAsFactors=FALSE)
-plot(row.names(d),d$V1, pch=3, xlab="Iterations (thousands)",ylab="Test Net Accuracy",  main="lr = 2e-6 (fixed policy)")
+d <- read.table("1/accuracy.txt", stringsAsFactors = FALSE)
+plot(row.names(d), d$V1, pch = 3, xlab = "Iterations (thousands)", ylab = "Test Net Accuracy", 
+    main = "lr = 2e-6 (fixed policy)")
 ```
 
 ![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1.png) 
+
 
 This is quite nice. Remember the rules of the game : I place bets on 3 linked currency pairs. There are 18 possibilities, so I could be wrong 94.5% of the time by placing a purely random bet. Instead this classifier reduces that probability to 57%.
 
@@ -31,11 +33,13 @@ We will multiply the learning rate by 0.4 every 100K iters.
 
 
 ```r
-d <- read.table('2/accuracy.txt',stringsAsFactors=FALSE)
-plot(row.names(d),d$V1, pch=3, xlab="Iterations (thousands)",ylab="Test Net Accuracy",  main="lr = 2e-6,8e-7,3.2e-7,1.28e-7,5.12e-8 (step policy)")
+d <- read.table("2/accuracy.txt", stringsAsFactors = FALSE)
+plot(row.names(d), d$V1, pch = 3, xlab = "Iterations (thousands)", ylab = "Test Net Accuracy", 
+    main = "lr = 2e-6,8e-7,3.2e-7,1.28e-7,5.12e-8 (step policy)")
 ```
 
 ![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
+
 
 
 

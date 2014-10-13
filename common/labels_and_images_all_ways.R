@@ -379,13 +379,13 @@ write.table(x=training.sample[,c("filename","recoded")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="data/2/lehedge_training.txt")
+            file="data/2/labels_training.txt")
 
 write.table(x=validation.sample[,c("filename","recoded")],
             quote=FALSE,
             row.names=FALSE,
             col.names=FALSE,
-            file="data/2/lehedge_validation.txt")
+            file="data/2/labels_validation.txt")
 
 # let the image generation happen!!
 # this will generate 960K images, about 10GB when backward window is 10600 pixels
